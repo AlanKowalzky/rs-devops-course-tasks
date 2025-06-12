@@ -2,3 +2,4 @@ diagrams.terraform/
 *.tfstate
 .terraform.lock.hcl
 .terraform/
+.cursorignore
