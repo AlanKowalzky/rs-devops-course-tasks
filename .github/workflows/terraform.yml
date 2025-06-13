@@ -60,14 +60,13 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
-        run: terraform plan -no-color
-        # Aby zapisać plan do pliku (do późniejszego użycia w apply lub jako artefakt):
-        # run: terraform plan -out=tfplan -no-color
-        # - name: Upload Terraform Plan
-        #   uses: actions/upload-artifact@v3
-        #   with:
-        #     name: tfplan
-        #     path: tfplan
+        run: terraform plan -out=tfplan -no-color
+
+      - name: Upload Terraform Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ github.sha }} # Unikalna nazwa dla artefaktu planu
+          path: tfplan
 
   terraform-apply:
     name: 'Terraform Apply'
@@ -86,6 +85,75 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Get OIDC Token for AWS
+        id: oidc_token_retriever # Unikalny ID dla tego kroku, aby odwołać się do jego wyników
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string # Ważne, aby token był traktowany jako string
+          script: |
+            // Pobieramy token OIDC dla audience 'sts.amazonaws.com'
+            const token = await core.getIDToken('sts.amazonaws.com');
+            core.info('OIDC token retrieved successfully.');
+            core.setOutput('jwt_token', token); // Ustawiamy token jako wynik kroku
+
+      - name: Decode and Inspect OIDC Token
+        if: always() # Uruchom ten krok zawsze, nawet jeśli poprzednie zawiodą (przydatne do debugowania)
+        shell: bash
+        run: |
+          echo "Attempting to decode OIDC token from step 'oidc_token_retriever'..."
+          JWT_TOKEN="${{ steps.oidc_token_retriever.outputs.jwt_token }}"
+
+          if [ -z "$JWT_TOKEN" ]; then
+            echo "Error: JWT_TOKEN from steps.oidc_token_retriever.outputs.jwt_token is empty."
+            echo "This indicates an issue with the 'Get OIDC Token for AWS' step."
+            exit 1
+          fi
+          
+          echo "Full JWT Token (first 30 chars): ${JWT_TOKEN:0:30}..."
+          
+          # Tokeny JWT składają się z trzech części oddzielonych kropkami: header.payload.signature
+          # Interesuje nas payload (druga część)
+          TOKEN_PAYLOAD=$(echo "$JWT_TOKEN" | cut -d '.' -f2)
+          
+          if [ -z "$TOKEN_PAYLOAD" ]; then
+            echo "Error: Could not extract payload (second part) from JWT token."
+            exit 1
+          fi
+          
+          echo "Extracted Payload (Base64 encoded, first 30 chars): ${TOKEN_PAYLOAD:0:30}..."
+          
+          # Dekodujemy payload zakodowany w Base64. Ta komenda próbuje kilku wariantów base64 dla kompatybilności.
+          DECODED_PAYLOAD=$(echo "$TOKEN_PAYLOAD" | base64 -d -w 0 2>/dev/null || echo "$TOKEN_PAYLOAD" | base64 -d -i 2>/dev/null || echo "$TOKEN_PAYLOAD" | base64 -d 2>/dev/null)
+
+          if [ -z "$DECODED_PAYLOAD" ]; then
+            echo "Error: Failed to decode Base64 payload. The payload might be malformed or empty."
+            exit 1
+          fi
+
+          echo "Decoded JWT Payload (JSON):"
+          echo "$DECODED_PAYLOAD" | jq .  # Używamy jq do sformatowania JSONa
+          
+          echo "---"
+          echo "Specific Claims from Decoded Payload:"
+          # Wyciągamy konkretne oświadczenia (claims) używając jq
+          SUB_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .sub)
+          AUD_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .aud)
+          ISS_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .iss)
+          EVENT_NAME_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .event_name)
+          REF_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .ref)
+          REPO_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .repository)
+          WORKFLOW_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .workflow)
+          JOB_WORKFLOW_SHA_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .job_workflow_sha)
+          
+          echo "Subject (sub): $SUB_CLAIM"
+          echo "Audience (aud): $AUD_CLAIM"
+          echo "Issuer (iss): $ISS_CLAIM"
+          echo "Event Name (event_name): $EVENT_NAME_CLAIM"
+          echo "Ref (ref): $REF_CLAIM"
+          echo "Repository (repository): $REPO_CLAIM"
+          echo "Workflow (workflow): $WORKFLOW_CLAIM"
+          echo "Job Workflow SHA (job_workflow_sha): $JOB_WORKFLOW_SHA_CLAIM"
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -96,11 +164,10 @@ jobs:
         run: terraform init
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -no-color
-        # Jeśli zapisałeś plan w poprzednim jobie:
-        # - name: Download Terraform Plan
-        #   uses: actions/download-artifact@v3
-        #   with:
-        #     name: tfplan
-        # - name: Terraform Apply
-        #   run: terraform apply -auto-approve -no-color tfplan
+        # Ten job powinien zastosować plan wygenerowany w jobie terraform-plan
+        # Najpierw pobierz artefakt planu
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ github.sha }} # Musi pasować do nazwy przesłanego artefaktu
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -no-color tfplan
