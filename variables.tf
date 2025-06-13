@@ -25,7 +25,7 @@ variable "github_actions_role_name" {
 variable "github_org_or_user" {
   description = "Twoja nazwa użytkownika GitHub lub nazwa organizacji."
   type        = string
-  default     = "alan.kowalzky"
+  default     = "AlanKowalzky" # Zaktualizowano wielkość liter
 }
 
 variable "github_repo_name" {
