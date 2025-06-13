@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - main # Lub Twoja domyślna gałąź
-      - task_1 # Dodane: uruchamiaj także na push do task_1 (check i plan)
+      # - task_1 # Dodane: uruchamiaj także na push do task_1 (check i plan)
+      - task-1 # Dodane: uruchamiaj także na push do task_1 (check i plan)
   pull_request:
     branches:
       - main # Lub Twoja domyślna gałąź
