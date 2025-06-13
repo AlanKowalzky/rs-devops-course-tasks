@@ -7,8 +7,8 @@ terraform {
   # odkomentowanie tej sekcji i uruchomienie `terraform init -migrate-state`.
   backend "s3" {
     bucket = "backend-tfstate-alan.kowalzky" # Nazwa bucketa dla stanu Terraform
-    key    = "global/s3/terraform.tfstate"                             # Klucz/ścieżka do pliku stanu w buckecie
-    region = "eu-west-1"                                               # Region dla bucketa stanu
+    key    = "global/s3/terraform.tfstate"   # Klucz/ścieżka do pliku stanu w buckecie
+    region = "eu-west-1"                     # Region dla bucketa stanu
     # dynamodb_table = "terraform-locks" # Opcjonalnie, dla blokowania stanu (nie wymagane w tym zadaniu)
   }
 }
