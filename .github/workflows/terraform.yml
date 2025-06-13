@@ -37,6 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: terraform-check
     env:
+      ACTIONS_STEP_DEBUG: true # Włącz logowanie debugowania dla kroków
       AWS_REGION: "eu-west-1" # Zgodnie z Twoim plikiem variables.tf
       # Pamiętaj o ustawieniu sekretu AWS_ACCOUNT_ID w ustawieniach repozytorium GitHub
       # oraz upewnij się, że nazwa roli jest zgodna z tą w iam.tf (var.github_actions_role_name)
