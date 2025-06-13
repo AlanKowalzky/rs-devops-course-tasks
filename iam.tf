@@ -13,7 +13,11 @@ data "aws_iam_policy_document" "github_actions_assume_role_policy" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_org_or_user}/${var.github_repo_name}:*"]
+      values   = [
+        "repo:${var.github_org_or_user}/${var.github_repo_name}:ref:refs/heads/*", # Dla push do dowolnej gałęzi
+        "repo:${var.github_org_or_user}/${var.github_repo_name}:pull_request"      # Dla Pull Requestów
+        # Możesz również dodać: "repo:${var.github_org_or_user}/${var.github_repo_name}:ref:refs/tags/*" # Dla tagów, jeśli potrzebne
+      ]
     }
 
     # Opcjonalnie, można dodać warunek na audience, jeśli jest to wymagane przez politykę bezpieczeństwa
