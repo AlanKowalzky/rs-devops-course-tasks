@@ -18,11 +18,11 @@ data "aws_iam_policy_document" "github_actions_assume_role_policy" {
     }
 
     # Opcjonalnie, można dodać warunek na audience, jeśli jest to wymagane przez politykę bezpieczeństwa
-    # condition {
-    #   test     = "StringEquals"
-    #   variable = "token.actions.githubusercontent.com:aud"
-    #   values   = ["sts.amazonaws.com"] # Domyślna audience dla AWS
-    # }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"] # Domyślna audience dla AWS
+    }
   }
 }
 
