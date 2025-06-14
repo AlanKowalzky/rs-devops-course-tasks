@@ -13,8 +13,12 @@ data "aws_iam_policy_document" "github_actions_assume_role_policy" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      # TYMCZASOWO: Uproszczony warunek do testów
-      values = ["repo:${var.github_org_or_user}/${var.github_repo_name}:*"]
+          # Zaktualizowano na podstawie analizy tokenu OIDC i wymagań workflow
+          values   = [
+            "repo:${var.github_org_or_user}/${var.github_repo_name}:ref:refs/heads/main",
+            "repo:${var.github_org_or_user}/${var.github_repo_name}:ref:refs/heads/task-1",
+            "repo:${var.github_org_or_user}/${var.github_repo_name}:pull_request"
+          ]
     }
 
     # Opcjonalnie, można dodać warunek na audience, jeśli jest to wymagane przez politykę bezpieczeństwa

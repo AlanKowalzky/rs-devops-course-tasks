@@ -114,26 +114,6 @@ jobs:
           echo "Workflow (workflow): $WORKFLOW_CLAIM"
           echo "Job Workflow SHA (job_workflow_sha): $JOB_WORKFLOW_SHA_CLAIM"
 
-      - name: Get OIDC Token (User-Provided Snippet Method)
-        id: user_oidc_token_generator
-        uses: actions/github-script@v7
-        with:
-          result-encoding: string
-          script: |
-            const token = await core.getIDToken('sts.amazonaws.com');
-            core.setOutput('token', token);
-
-      - name: Show OIDC Token Info (User-Provided Snippet Method)
-        shell: bash
-        run: |
-          echo "Decoded JWT (from User-Provided Snippet Method):"
-          JWT_FROM_USER_SNIPPET="${{ steps.user_oidc_token_generator.outputs.token }}"
-          if [ -z "$JWT_FROM_USER_SNIPPET" ]; then
-            echo "Error: Token from user_oidc_token_generator is empty."
-            exit 1
-          fi
-          echo "$JWT_FROM_USER_SNIPPET" | cut -d '.' -f2 | base64 --decode | jq .
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
