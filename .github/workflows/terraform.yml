@@ -3,17 +3,16 @@ name: Terraform CI/CD
 on:
   push:
     branches:
-      - main # Lub Twoja domyślna gałąź
-      # - task_1 # Dodane: uruchamiaj także na push do task_1 (check i plan)
-      - task-1 # Dodane: uruchamiaj także na push do task_1 (check i plan)
+      - main
+      - task-1
   pull_request:
     branches:
-      - main # Lub Twoja domyślna gałąź
+      - main
 
 permissions:
-  id-token: write # Wymagane do uwierzytelniania OIDC z AWS
-  contents: read  # Wymagane do pobrania kodu repozytorium
-  pull-requests: write # Opcjonalne: jeśli chcesz dodawać komentarze z planem do PR
+  id-token: write
+  contents: read
+  pull-requests: write
 
 jobs:
   terraform-check:
@@ -25,24 +24,17 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-        # Możesz dodać konkretną wersję Terraform, jeśli jest to wymagane:
-        # with:
-        #   terraform_version: '1.6.x'
 
       - name: Terraform Format Check
         run: |
-          terraform fmt -recursive # Automatycznie sformatuj
-          # Możesz dodać krok do commitowania zmian, jeśli pipeline ma uprawnienia do zapisu
+          terraform fmt -recursive
 
   terraform-plan:
     name: 'Terraform Plan'
     runs-on: ubuntu-latest
     needs: terraform-check
     env:
-      ACTIONS_STEP_DEBUG: true # Włącz logowanie debugowania dla kroków
-      AWS_REGION: "eu-west-1" # Zgodnie z Twoim plikiem variables.tf
-      # Pamiętaj o ustawieniu sekretu AWS_ACCOUNT_ID w ustawieniach repozytorium GitHub
-      # oraz upewnij się, że nazwa roli jest zgodna z tą w iam.tf (var.github_actions_role_name)
+      AWS_REGION: "eu-west-1"
       TF_ROLE_TO_ASSUME: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActionsRole"
 
     steps:
@@ -53,18 +45,17 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Get OIDC Token for AWS
-        id: oidc_token_retriever # Unikalny ID dla tego kroku, aby odwołać się do jego wyników
+        id: oidc_token_retriever
         uses: actions/github-script@v7
         with:
-          result-encoding: string # Ważne, aby token był traktowany jako string
+          result-encoding: string
           script: |
-            // Pobieramy token OIDC dla audience 'sts.amazonaws.com'
             const token = await core.getIDToken('sts.amazonaws.com');
             core.info('OIDC token retrieved successfully.');
-            core.setOutput('jwt_token', token); // Ustawiamy token jako wynik kroku
+            core.setOutput('jwt_token', token);
 
       - name: Decode and Inspect OIDC Token
-        if: always() # Uruchom ten krok zawsze, nawet jeśli poprzednie zawiodą (przydatne do debugowania)
+        if: always()
         shell: bash
         run: |
           echo "Attempting to decode OIDC token from step 'oidc_token_retriever'..."
@@ -131,14 +122,13 @@ jobs:
       - name: Upload Terraform Plan Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan-${{ github.sha }} # Unikalna nazwa dla artefaktu planu
+          name: tfplan-${{ github.sha }}
           path: tfplan
 
   terraform-apply:
     name: 'Terraform Apply'
     runs-on: ubuntu-latest
     needs: terraform-plan
-    # Uruchamiaj tylko na push do gałęzi 'main' (lub Twojej domyślnej)
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     env:
       AWS_REGION: "eu-west-1"
@@ -161,10 +151,8 @@ jobs:
         run: terraform init
 
       - name: Terraform Apply
-        # Ten job powinien zastosować plan wygenerowany w jobie terraform-plan
-        # Najpierw pobierz artefakt planu
         uses: actions/download-artifact@v4
         with:
-          name: tfplan-${{ github.sha }} # Musi pasować do nazwy przesłanego artefaktu
+          name: tfplan-${{ github.sha }}
       - name: Terraform Apply
         run: terraform apply -auto-approve -no-color tfplan

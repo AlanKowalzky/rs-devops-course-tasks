@@ -13,19 +13,16 @@ data "aws_iam_policy_document" "github_actions_assume_role_policy" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      # Zaktualizowano na podstawie analizy tokenu OIDC i wymagań workflow
       values = [
         "repo:${var.github_org_or_user}/${var.github_repo_name}:ref:refs/heads/main",
         "repo:${var.github_org_or_user}/${var.github_repo_name}:ref:refs/heads/task-1",
         "repo:${var.github_org_or_user}/${var.github_repo_name}:pull_request"
       ]
     }
-
-    # Opcjonalnie, można dodać warunek na audience, jeśli jest to wymagane przez politykę bezpieczeństwa
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:aud"
-      values   = ["sts.amazonaws.com"] # Domyślna audience dla AWS
+      values   = ["sts.amazonaws.com"]
     }
   }
 }
@@ -39,10 +36,6 @@ resource "aws_iam_role" "github_actions_role" {
     Description = "IAM role for GitHub Actions to deploy infrastructure via Terraform"
   }
 }
-
-# Dołączanie polityk zarządzanych przez AWS przy użyciu dedykowanego zasobu
-# UWAGA: Nadawanie pełnego dostępu (IAMFullAccess) jest ryzykowne dla automatyzacji.
-# Rozważ zawężenie uprawnień do absolutnie niezbędnych.
 
 resource "aws_iam_role_policy_attachment" "github_actions_ec2_full" {
   role       = aws_iam_role.github_actions_role.name
@@ -59,7 +52,7 @@ resource "aws_iam_role_policy_attachment" "github_actions_s3_full" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
-resource "aws_iam_role_policy_attachment" "github_actions_iam_full" { # Bądź ostrożny z tą polityką!
+resource "aws_iam_role_policy_attachment" "github_actions_iam_full" {
   role       = aws_iam_role.github_actions_role.name
   policy_arn = "arn:aws:iam::aws:policy/IAMFullAccess"
 }
