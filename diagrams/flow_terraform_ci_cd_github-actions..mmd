@@ -1,0 +1,13 @@
+```mermaid
+flowchart TD
+    A["Push do main lub task_1"]
+    B["Job: Terraform Format Check"]
+    C["Job: Terraform Plan"]
+    D["Job: Terraform Apply (tylko push do main)"]
+    E["Koniec"]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+```

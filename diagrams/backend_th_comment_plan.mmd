@@ -1,0 +1,64 @@
+graph TD
+    subgraph "Konfiguracja Terraform w C:\\prog_AWS_DEVOPS\\rs-devops-course-tasks\\"
+        direction LR
+
+        subgraph "Pliki Konfiguracyjne"
+            V["variables.tf"]
+            M["main.tf"]
+            B["backend.tf (S3 Backend - zakomentowany)"]
+            P["providers.tf"]
+            O["outputs.tf"]
+        end
+
+        subgraph "Zmienne (variables.tf)"
+            V_Region["var.aws_region<br>(default: 'eu-west-1')"]
+            V_BackendBucketName["var.s3_backend_bucket_name<br>(default: 'backend-tfstate-alan.kowalzky')"]
+            V_AppBucketName["var.application_data_s3_bucket_name<br>(default: 'application-data-alan.kowalzky')"]
+        end
+
+        subgraph "Zasoby S3 (main.tf)"
+            S3_Backend["aws_s3_bucket.s3_backend_bucket<br>bucket = var.s3_backend_bucket_name<br>('backend-tfstate-alan.kowalzky')"]
+            S3_App["aws_s3_bucket.application_data_bucket<br>bucket = var.application_data_s3_bucket_name<br>('application-data-alan.kowalzky')"]
+        end
+
+        subgraph "Konfiguracja Backendu S3 (backend.tf)"
+            BackendConfig["backend 's3'<br>bucket = 'backend-tfstate-alan.kowalzky'<br>key = 'global/s3/terraform.tfstate'<br>region = 'eu-west-1'"]
+        end
+
+        V --> V_Region
+        V --> V_BackendBucketName
+        V --> V_AppBucketName
+
+        M --> S3_Backend
+        M --> S3_App
+
+        V_BackendBucketName --> S3_Backend
+        V_AppBucketName --> S3_App
+
+        B --> BackendConfig
+        V_BackendBucketName -.-> BackendConfig  
+        %% # Zmienna używana do nazwy bucketa w konfiguracji backendu
+
+        P --> V_Region 
+        %% # providers.tf używa var.aws_region
+
+        S3_Backend --> O 
+        %% # outputs.tf odwołuje się do s3_backend_bucket
+        S3_App --> O 
+        %% # outputs.tf odwołuje się do application_data_bucket
+
+        style V fill:#f9f,stroke:#333,stroke-width:2px
+        style M fill:#f9f,stroke:#333,stroke-width:2px
+        style B fill:#f9f,stroke:#333,stroke-width:2px
+        style P fill:#f9f,stroke:#333,stroke-width:2px
+        style O fill:#f9f,stroke:#333,stroke-width:2px
+
+        style V_Region fill:#ccf,stroke:#333,stroke-width:2px
+        style V_BackendBucketName fill:#ccf,stroke:#333,stroke-width:2px
+        style V_AppBucketName fill:#ccf,stroke:#333,stroke-width:2px
+
+        style S3_Backend fill:#cfc,stroke:#333,stroke-width:2px
+        style S3_App fill:#cfc,stroke:#333,stroke-width:2px
+
+        style BackendConfig fill:#fcc,stroke:#333,stroke-width:2px
+    end

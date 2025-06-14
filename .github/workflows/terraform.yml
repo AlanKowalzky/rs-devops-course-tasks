@@ -1,0 +1,158 @@
+name: Terraform CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - task-1
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  terraform-check:
+    name: 'Terraform Format Check'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format Check
+        run: |
+          terraform fmt -recursive
+
+  terraform-plan:
+    name: 'Terraform Plan'
+    runs-on: ubuntu-latest
+    needs: terraform-check
+    env:
+      AWS_REGION: "eu-west-1"
+      TF_ROLE_TO_ASSUME: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActionsRole"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Get OIDC Token for AWS
+        id: oidc_token_retriever
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const token = await core.getIDToken('sts.amazonaws.com');
+            core.info('OIDC token retrieved successfully.');
+            core.setOutput('jwt_token', token);
+
+      - name: Decode and Inspect OIDC Token
+        if: always()
+        shell: bash
+        run: |
+          echo "Attempting to decode OIDC token from step 'oidc_token_retriever'..."
+          JWT_TOKEN="${{ steps.oidc_token_retriever.outputs.jwt_token }}"
+
+          if [ -z "$JWT_TOKEN" ]; then
+            echo "Error: JWT_TOKEN from steps.oidc_token_retriever.outputs.jwt_token is empty."
+            echo "This indicates an issue with the 'Get OIDC Token for AWS' step."
+            exit 1
+          fi
+          
+          echo "Full JWT Token (first 30 chars): ${JWT_TOKEN:0:30}..."
+          
+          TOKEN_PAYLOAD=$(echo "$JWT_TOKEN" | cut -d '.' -f2)
+          
+          if [ -z "$TOKEN_PAYLOAD" ]; then
+            echo "Error: Could not extract payload (second part) from JWT token."
+            exit 1
+          fi
+          
+          echo "Extracted Payload (Base64 encoded, first 30 chars): ${TOKEN_PAYLOAD:0:30}..."
+          DECODED_PAYLOAD=$(echo "$TOKEN_PAYLOAD" | base64 -d -w 0 2>/dev/null || echo "$TOKEN_PAYLOAD" | base64 -d -i 2>/dev/null || echo "$TOKEN_PAYLOAD" | base64 -d 2>/dev/null)
+
+          if [ -z "$DECODED_PAYLOAD" ]; then
+            echo "Error: Failed to decode Base64 payload. The payload might be malformed or empty."
+            exit 1
+          fi
+
+          echo "Decoded JWT Payload (JSON):"
+          echo "$DECODED_PAYLOAD" | jq .
+          
+          echo "---"
+          echo "Specific Claims from Decoded Payload:"
+          SUB_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .sub)
+          AUD_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .aud)
+          ISS_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .iss)
+          EVENT_NAME_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .event_name)
+          REF_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .ref)
+          REPO_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .repository)
+          WORKFLOW_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .workflow)
+          JOB_WORKFLOW_SHA_CLAIM=$(echo "$DECODED_PAYLOAD" | jq -r .job_workflow_sha)
+          
+          echo "Subject (sub): $SUB_CLAIM"
+          echo "Audience (aud): $AUD_CLAIM"
+          echo "Issuer (iss): $ISS_CLAIM"
+          echo "Event Name (event_name): $EVENT_NAME_CLAIM"
+          echo "Ref (ref): $REF_CLAIM"
+          echo "Repository (repository): $REPO_CLAIM"
+          echo "Workflow (workflow): $WORKFLOW_CLAIM"
+          echo "Job Workflow SHA (job_workflow_sha): $JOB_WORKFLOW_SHA_CLAIM"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.TF_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan -no-color
+
+      - name: Upload Terraform Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ github.sha }}
+          path: tfplan
+
+  terraform-apply:
+    name: 'Terraform Apply'
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    env:
+      AWS_REGION: "eu-west-1"
+      TF_ROLE_TO_ASSUME: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActionsRole"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.TF_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ github.sha }}
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -no-color tfplan
