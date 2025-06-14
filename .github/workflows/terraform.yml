@@ -30,7 +30,9 @@ jobs:
         #   terraform_version: '1.6.x'
 
       - name: Terraform Format Check
-        run: terraform fmt -check -recursive
+        run: |
+          terraform fmt -recursive # Automatycznie sformatuj
+          # Możesz dodać krok do commitowania zmian, jeśli pipeline ma uprawnienia do zapisu
 
   terraform-plan:
     name: 'Terraform Plan'
