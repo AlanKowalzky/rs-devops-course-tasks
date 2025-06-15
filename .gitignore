@@ -1,0 +1,6 @@
+diagrams
+.terraform/
+*.tfstate
+.terraform.lock.hcl
+.terraform/
+.cursorignoreterraform.tfstate.backup
