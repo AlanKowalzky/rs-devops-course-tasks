@@ -3,4 +3,6 @@ diagrams
 *.tfstate
 .terraform.lock.hcl
 .terraform/
-.cursorignoreterraform.tfstate.backup
+.cursorignore
+terraform.tfstate.backup
+
