@@ -23,7 +23,6 @@ resource "aws_route_table_association" "public" {
 }
 
 # Prywatne tablice routingu (po jednej na AZ dla elastyczności z NAT Gateway w przyszłości)
-# Na tym etapie mają tylko domyślną trasę lokalną. Trasy do internetu przez NAT zostaną dodane później.
 resource "aws_route_table" "private" {
   for_each = {
     for i, az in var.availability_zones : az => {
@@ -49,4 +48,13 @@ resource "aws_route_table_association" "private" {
   # Kluczem w aws_route_table.private jest AZ (np. "eu-central-1a")
   # Kluczem w aws_subnet.private również jest AZ
   route_table_id = aws_route_table.private[each.key].id
+}
+
+# Dodanie trasy do instancji NAT w każdej prywatnej tablicy routingu
+resource "aws_route" "private_nat_instance" {
+  for_each = aws_route_table.private
+
+  route_table_id         = each.value.id
+  destination_cidr_block = "0.0.0.0/0"
+  network_interface_id   = aws_instance.nat.primary_network_interface_id
 }

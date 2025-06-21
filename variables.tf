@@ -69,3 +69,16 @@ variable "private_subnet_cidr_blocks" {
   type        = list(string)
   default     = ["10.0.101.0/24", "10.0.102.0/24"]
 }
+
+variable "nat_instance_type" {
+  description = "Typ instancji EC2 dla NAT Instance."
+  type        = string
+  default     = "t3.micro" # Zmieniono na t3.micro, aby pasowało do AWS Free Tier
+}
+
+variable "my_ip_for_ssh" {
+  description = "Twój publiczny adres IP dla dostępu SSH (w formacie X.X.X.X/32). Używane dla Bastiona i opcjonalnie NAT."
+  type        = string
+  sensitive   = true
+  # WAŻNE: Ustaw swój publiczny IP, np. przez zmienną środowiskową TF_VAR_my_ip_for_ssh
+}
