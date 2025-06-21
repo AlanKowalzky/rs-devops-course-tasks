@@ -118,6 +118,8 @@ jobs:
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan -no-color
+        env:
+          TF_VAR_my_ip_for_ssh: ${{ secrets.MY_IP_FOR_SSH }}
 
       - name: Upload Terraform Plan Artifact
         uses: actions/upload-artifact@v4
@@ -150,9 +152,11 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Apply
+      - name: Download Terraform Plan
         uses: actions/download-artifact@v4
         with:
           name: tfplan-${{ github.sha }}
       - name: Terraform Apply
         run: terraform apply -auto-approve -no-color tfplan
+        env:
+          TF_VAR_my_ip_for_ssh: ${{ secrets.MY_IP_FOR_SSH }}
