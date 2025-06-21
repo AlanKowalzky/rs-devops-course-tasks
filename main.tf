@@ -1,18 +1,7 @@
 terraform {
   required_version = ">= 1.6.0"
 
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0" # lub najnowsza stabilna
-    }
-  }
-
   # Backend S3 jest już zdefiniowany w backend.tf
-}
-
-provider "aws" {
-  region = var.aws_region
 }
 
 resource "aws_s3_bucket" "s3_backend_bucket" {
