@@ -17,3 +17,30 @@ output "application_data_s3_bucket_arn" {
   description = "ARN bucketa S3 używanego dla danych aplikacji."
   value       = aws_s3_bucket.application_data_bucket.arn
 }
+
+# Task 2: Basic Infrastructure Configuration Outputs
+
+output "vpc_id" {
+  description = "ID utworzonego VPC."
+  value       = aws_vpc.main.id
+}
+
+output "vpc_cidr_block" {
+  description = "Blok CIDR utworzonego VPC."
+  value       = aws_vpc.main.cidr_block
+}
+
+output "public_subnet_ids" {
+  description = "Lista ID utworzonych podsieci publicznych."
+  value       = [for subnet in aws_subnet.public : subnet.id]
+}
+
+output "private_subnet_ids" {
+  description = "Lista ID utworzonych podsieci prywatnych."
+  value       = [for subnet in aws_subnet.private : subnet.id]
+}
+
+output "internet_gateway_id" {
+  description = "ID utworzonego Internet Gateway."
+  value       = aws_internet_gateway.main.id
+}

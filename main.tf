@@ -1,3 +1,20 @@
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0" # lub najnowsza stabilna
+    }
+  }
+
+  # Backend S3 jest już zdefiniowany w backend.tf
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
 resource "aws_s3_bucket" "s3_backend_bucket" {
   bucket = var.s3_backend_bucket_name
 
@@ -20,6 +37,15 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_backend_bucket
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
     }
+  }
+}
+
+# Lokalne zmienne dla wspólnych tagów
+locals {
+  common_tags = {
+    Project     = var.project_name
+    Environment = "dev" # Możesz użyć zmiennej var.environment, jeśli zdefiniowana
+    Terraform   = "true"
   }
 }
 
