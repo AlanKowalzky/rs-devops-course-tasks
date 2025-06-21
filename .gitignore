@@ -1,4 +1,4 @@
-diagrams
+diagrams/
 .terraform/
 *.tfstate
 *.tfstate.d/
@@ -8,3 +8,5 @@ diagrams
 terraform.tfstate.backup
 *.tfvars
 *.tfvars.json
+.ssh/
+*.pem

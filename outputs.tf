@@ -44,3 +44,18 @@ output "internet_gateway_id" {
   description = "ID utworzonego Internet Gateway."
   value       = aws_internet_gateway.main.id
 }
+
+output "nat_instance_public_ip" {
+  description = "Publiczny adres IP instancji NAT/Bastion."
+  value       = aws_eip.nat_instance.public_ip
+}
+
+output "nat_instance_sg_id" {
+  description = "ID grupy bezpieczeństwa dla instancji NAT/Bastion."
+  value       = aws_security_group.nat_instance.id
+}
+
+output "private_workers_sg_id" {
+  description = "ID grupy bezpieczeństwa dla przyszłych workerów w podsieciach prywatnych."
+  value       = aws_security_group.private_workers.id
+}

@@ -63,7 +63,7 @@ resource "aws_instance" "nat" {
   associate_public_ip_address = true # Potrzebne, aby instancja miała dostęp do internetu na starcie.
   source_dest_check           = false # KLUCZOWE: Wyłącza sprawdzanie, czy ta instancja jest źródłem/celem pakietów.
   vpc_security_group_ids      = [aws_security_group.nat_instance.id]
-  # key_name                    = var.ssh_key_name # Dodaj, jeśli masz parę kluczy i chcesz się logować.
+  key_name                    = var.ssh_key_name # Nazwa pary kluczy SSH w AWS.
 
   # Skrypt uruchamiany przy starcie instancji, konfigurujący NAT.
   user_data = <<-EOF

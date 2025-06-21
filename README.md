@@ -135,3 +135,33 @@ Ensure your local AWS CLI is configured with appropriate permissions.
 
 ---
 *Documentation prepared as part of Task 1 for the RS School DevOps Course.*
+
+## Task 2: Basic Infrastructure Configuration
+
+This task creates a basic yet robust network infrastructure, ready for hosting a Kubernetes cluster.
+
+### Network Topology
+
+*   **VPC:** The main, isolated virtual network (`10.0.0.0/16`).
+*   **Public Subnets:** Two subnets, each in a different Availability Zone (AZ). Resources in these subnets have direct access to the internet.
+*   **Private Subnets:** Two subnets, each in a different AZ. Resources in these subnets do not have direct access to the internet.
+*   **Internet Gateway:** Enables communication between public subnets and the internet.
+*   **Routing:**
+    *   The route table for public subnets directs traffic `0.0.0.0/0` to the Internet Gateway.
+    *   The route tables for private subnets direct traffic `0.0.0.0/0` to the NAT instance.
+
+### NAT Instance / Bastion Host
+
+To optimize costs (within the Free Tier), a single EC2 instance (`t3.micro`) fulfills two roles:
+1.  **NAT Instance:** Allows resources in private subnets to initiate outbound connections to the internet.
+2.  **Bastion Host:** Serves as a secure access point (SSH) for managing resources in private subnets.
+
+*   **Access:** SSH access to the instance is allowed from the IP address defined in the `my_ip_for_ssh` variable.
+*   **Security Group:** A dedicated security group (`nat_instance_sg`) controls traffic to and from the instance.
+
+### Additional Variables for Task 2
+
+*   `vpc_cidr_block`: CIDR block for the VPC.
+*   `public_subnet_cidr_blocks` / `private_subnet_cidr_blocks`: CIDR blocks for the subnets.
+*   `nat_instance_type`: Instance type for the NAT/Bastion (default: `t3.micro` for the Free Tier).
+*   `my_ip_for_ssh`: **(Requires configuration)** Your public IP address from which you'll connect via SSH. This can be set in the `terraform.tfvars` file or as an environment variable.

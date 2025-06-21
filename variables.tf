@@ -82,3 +82,9 @@ variable "my_ip_for_ssh" {
   sensitive   = true
   # WAŻNE: Ustaw swój publiczny IP, np. przez zmienną środowiskową TF_VAR_my_ip_for_ssh
 }
+
+variable "ssh_key_name" {
+  description = "Nazwa pary kluczy SSH w AWS do użycia dla instancji EC2."
+  type        = string
+  default     = "k8s-infra-key" # WAŻNE: Upewnij się, że ta para kluczy istnieje w Twoim regionie AWS.
+}
