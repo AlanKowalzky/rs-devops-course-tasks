@@ -62,3 +62,13 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "application_data_
     }
   }
 }
+
+# Nody k3s
+resource "aws_instance" "k3s_node" {
+  count                  = var.k3s_node_count
+  ami                    = var.ami_id
+  instance_type          = var.k3s_instance_type
+  subnet_id              = element([for subnet in aws_subnet.private : subnet.id], count.index)
+  key_name               = var.ssh_key_name
+  tags = merge(local.common_tags, { Name = "k3s-node-${count.index + 1}" })
+}

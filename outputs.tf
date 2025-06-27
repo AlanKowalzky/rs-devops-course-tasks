@@ -59,3 +59,13 @@ output "private_workers_sg_id" {
   description = "ID grupy bezpieczeństwa dla przyszłych workerów w podsieciach prywatnych."
   value       = aws_security_group.private_workers.id
 }
+
+output "bastion_public_ip" {
+  description = "Publiczny adres IP bastiona (NAT instance z task-1)."
+  value       = aws_eip.nat_instance.public_ip
+}
+
+output "k3s_nodes_private_ips" {
+  description = "Prywatne adresy IP nodów k3s."
+  value       = [for node in aws_instance.k3s_node : node.private_ip]
+}

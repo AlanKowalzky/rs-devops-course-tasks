@@ -83,8 +83,19 @@ variable "my_ip_for_ssh" {
   # WAŻNE: Ustaw swój publiczny IP, np. przez zmienną środowiskową TF_VAR_my_ip_for_ssh
 }
 
-variable "ssh_key_name" {
-  description = "Nazwa pary kluczy SSH w AWS do użycia dla instancji EC2."
+variable "k3s_node_count" {
+  description = "Liczba nodów k3s (worker/master)."
+  type        = number
+  default     = 2
+}
+
+variable "k3s_instance_type" {
+  description = "Typ instancji EC2 dla nodów k3s."
   type        = string
-  default     = "k8s-infra-key" # WAŻNE: Upewnij się, że ta para kluczy istnieje w Twoim regionie AWS.
+  default     = "t3.micro"
+}
+
+variable "ssh_key_name" {
+  description = "Nazwa pary kluczy SSH do EC2."
+  type        = string
 }
