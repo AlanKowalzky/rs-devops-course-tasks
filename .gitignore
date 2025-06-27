@@ -10,3 +10,4 @@ terraform.tfstate.backup
 *.tfvars.json
 .ssh/
 *.pem
+req_*
