@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
 
-# Kolory dla lepszej czytelności
+# Colors for better readability
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Funkcja do logowania
+# Logging function
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
 }
@@ -20,7 +20,7 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Funkcja do sprawdzania czy komenda się udała
+# Function to check if command succeeded
 check_command() {
     if [ $? -eq 0 ]; then
         log_info "$1 - OK"
@@ -30,38 +30,62 @@ check_command() {
     fi
 }
 
-echo "=== Instalacja k3s na nodach ==="
+echo "=== Installing k3s on nodes ==="
 
-# Sprawdź czy SSH agent działa
+# Check if SSH agent is running
 if [ -z "$SSH_AUTH_SOCK" ]; then
-    log_warn "SSH agent nie jest uruchomiony. Uruchamiam..."
+    log_warn "SSH agent is not running. Starting..."
     eval $(ssh-agent -s)
-    check_command "Uruchomienie SSH agent"
+    check_command "Starting SSH agent"
 fi
 
-# Sprawdź czy klucz jest dodany do agenta
+# Check if key is added to agent
 if ! ssh-add -l | grep -q "k8s-infra-key.pem"; then
-    log_warn "Dodaję klucz SSH do agenta..."
+    log_warn "Adding SSH key to agent..."
     ssh-add ~/.ssh/k8s-infra-key.pem
-    check_command "Dodanie klucza SSH"
+    check_command "Adding SSH key"
 fi
 
-# Sprawdź czy jq jest dostępne
+# Check if jq is available
 if ! command -v jq &> /dev/null; then
-    log_error "jq nie jest zainstalowane. Zainstaluj jq aby kontynuować."
-    exit 1
+    log_warn "jq is not installed. Using alternative JSON parsing method..."
+    USE_JQ=false
+else
+    USE_JQ=true
 fi
 
-# Pobierz IP nodów z outputów Terraform
-log_info "Pobieranie IP nodów..."
+# Get node IPs from Terraform outputs
+log_info "Getting node IPs..."
 NODES_JSON=$(terraform output -json k3s_nodes_private_ips)
-MASTER_IP=$(echo "$NODES_JSON" | jq -r '.[0]')
-WORKER_IP=$(echo "$NODES_JSON" | jq -r '.[1]')
+
+if [ "$USE_JQ" = true ]; then
+    # Use jq if available
+    MASTER_IP=$(echo "$NODES_JSON" | jq -r '.[0]')
+    WORKER_IP=$(echo "$NODES_JSON" | jq -r '.[1]')
+else
+    # Alternative JSON parsing method without jq
+    # Remove square brackets and quotes, split by commas
+    CLEAN_JSON=$(echo "$NODES_JSON" | tr -d '[]"' | sed 's/,/ /g')
+    
+    # Check if awk is available
+    if command -v awk &> /dev/null; then
+        MASTER_IP=$(echo "$CLEAN_JSON" | awk '{print $1}')
+        WORKER_IP=$(echo "$CLEAN_JSON" | awk '{print $2}')
+    elif command -v cut &> /dev/null; then
+        # Use cut as alternative
+        MASTER_IP=$(echo "$CLEAN_JSON" | cut -d' ' -f1)
+        WORKER_IP=$(echo "$CLEAN_JSON" | cut -d' ' -f2)
+    else
+        # Final method using read
+        read MASTER_IP WORKER_IP <<< "$CLEAN_JSON"
+    fi
+fi
+
 BASTION_IP=$(terraform output -raw bastion_public_ip)
 
-# Sprawdź czy IP są poprawnie pobrane
+# Check if IPs are correctly retrieved
 if [ "$MASTER_IP" = "null" ] || [ "$WORKER_IP" = "null" ] || [ "$BASTION_IP" = "null" ]; then
-    log_error "Nie udało się pobrać IP nodów. Sprawdź czy Terraform został zastosowany."
+    log_error "Failed to retrieve node IPs. Check if Terraform has been applied."
     exit 1
 fi
 
@@ -69,43 +93,43 @@ log_info "Master IP: $MASTER_IP"
 log_info "Worker IP: $WORKER_IP"
 log_info "Bastion IP: $BASTION_IP"
 
-# Ścieżka do klucza SSH
+# SSH key path
 SSH_KEY=~/.ssh/k8s-infra-key.pem
 
-# Funkcja do testowania połączenia SSH
+# Function to test SSH connection
 test_ssh_connection() {
     local host=$1
     local description=$2
     
-    log_info "Testowanie połączenia SSH do $description ($host)..."
+    log_info "Testing SSH connection to $description ($host)..."
     timeout 30 ssh -i $SSH_KEY -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$host "echo 'SSH connection successful'" > /dev/null 2>&1
-    check_command "Połączenie SSH do $description"
+    check_command "SSH connection to $description"
 }
 
-# Testuj połączenia
+# Test connections
 test_ssh_connection $MASTER_IP "master node"
 test_ssh_connection $WORKER_IP "worker node"
 
-# Funkcja do instalacji k3s na masterze z poprawkami
+# Function to install k3s on master with fixes
 install_k3s_master() {
-    log_info "=== Instalacja k3s na masterze ==="
+    log_info "=== Installing k3s on master ==="
     
-    # Sprawdź czy k3s już działa
+    # Check if k3s is already running
     ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "
         if systemctl is-active --quiet k3s; then
-            echo 'K3s już działa na masterze. Pomijam instalację.'
+            echo 'K3s is already running on master. Skipping installation.'
             exit 0
         fi
     " || true
     
-    # Instalacja k3s na masterze z poprawionym plikiem serwisu
+    # Install k3s on master with corrected service file
     ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "
-        # Pobierz binarny k3s
+        # Download k3s binary
         curl -Lo k3s https://github.com/k3s-io/k3s/releases/download/v1.32.5+k3s1/k3s
         chmod +x k3s
         sudo mv k3s /usr/local/bin/
         
-        # Utwórz poprawiony plik serwisu systemd
+        # Create corrected systemd service file
         sudo tee /etc/systemd/system/k3s.service > /dev/null <<EOF
 [Unit]
 Description=Lightweight Kubernetes
@@ -131,92 +155,92 @@ RestartSec=5s
 WantedBy=multi-user.target
 EOF
         
-        # Sprawdź składnię pliku serwisu
+        # Check service file syntax
         sudo systemd-analyze verify /etc/systemd/system/k3s.service
         
-        # Uruchom serwis
+        # Start service
         sudo systemctl daemon-reload
         sudo systemctl enable k3s
         sudo systemctl start k3s
         
-        # Czekaj na uruchomienie
+        # Wait for startup
         sleep 30
         
-        # Sprawdź status
+        # Check status
         sudo systemctl status k3s --no-pager
     "
-    check_command "Instalacja k3s na masterze"
+    check_command "Installing k3s on master"
 }
 
-# Funkcja do naprawy uprawnień na masterze
+# Function to fix permissions on master
 fix_master_permissions() {
-    log_info "=== Naprawa uprawnień na masterze ==="
+    log_info "=== Fixing permissions on master ==="
     
     ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "
-        # Popraw uprawnienia do pliku kubeconfig
+        # Fix kubeconfig file permissions
         sudo chmod 644 /etc/rancher/k3s/k3s.yaml
         sudo chown root:root /etc/rancher/k3s/k3s.yaml
         
-        # Skopiuj plik konfiguracyjny do katalogu domowego użytkownika
+        # Copy config file to user home directory
         mkdir -p ~/.kube
         sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
         sudo chown ec2-user:ec2-user ~/.kube/config
         chmod 600 ~/.kube/config
         
-        # Ustaw zmienną środowiskową KUBECONFIG
+        # Set KUBECONFIG environment variable
         if ! grep -q 'export KUBECONFIG=' ~/.bashrc; then
             echo 'export KUBECONFIG=~/.kube/config' >> ~/.bashrc
         fi
         export KUBECONFIG=~/.kube/config
         
-        # Utwórz poprawny alias kubectl
+        # Create correct kubectl alias using full path
         if ! grep -q 'alias kubectl=' ~/.bashrc; then
-            echo 'alias kubectl=\"sudo k3s kubectl\"' >> ~/.bashrc
+            echo 'alias kubectl=\"/usr/local/bin/k3s kubectl\"' >> ~/.bashrc
         fi
-        alias kubectl=\"sudo k3s kubectl\"
+        alias kubectl=\"/usr/local/bin/k3s kubectl\"
         
-        # Sprawdź czy kubectl działa
-        if sudo k3s kubectl get nodes; then
-            echo '✅ Kubectl działa poprawnie!'
+        # Check if kubectl works using full path
+        if /usr/local/bin/k3s kubectl get nodes; then
+            echo '✅ Kubectl is working correctly!'
         else
-            echo '❌ Problem z kubectl. Sprawdź logi:'
+            echo '❌ Problem with kubectl. Check logs:'
             sudo journalctl -u k3s -n 20
         fi
     "
-    check_command "Naprawa uprawnień na masterze"
+    check_command "Fixing permissions on master"
 }
 
-# Funkcja do instalacji k3s na workerze z poprawkami
+# Function to install k3s on worker with fixes
 install_k3s_worker() {
-    log_info "=== Instalacja k3s na workerze ==="
+    log_info "=== Installing k3s on worker ==="
     
-    # Sprawdź czy k3s-agent już działa
+    # Check if k3s-agent is already running
     ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$WORKER_IP "
         if systemctl is-active --quiet k3s-agent; then
-            echo 'K3s-agent już działa na workerze. Pomijam instalację.'
+            echo 'K3s-agent is already running on worker. Skipping installation.'
             exit 0
         fi
     " || true
     
-    # Pobierz token z mastera
+    # Get token from master
     TOKEN=$(ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "sudo cat /var/lib/rancher/k3s/server/node-token")
-    check_command "Pobranie tokenu k3s"
+    check_command "Getting k3s token"
     
     if [ -z "$TOKEN" ]; then
-        log_error "Token k3s jest pusty!"
+        log_error "K3s token is empty!"
         exit 1
     fi
     
-    log_info "Token pobrany pomyślnie"
+    log_info "Token retrieved successfully"
     
-    # Instalacja k3s na workerze z poprawionym plikiem serwisu
+    # Install k3s on worker with corrected service file
     ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$WORKER_IP "
-        # Pobierz binarny k3s
+        # Download k3s binary
         curl -Lo k3s https://github.com/k3s-io/k3s/releases/download/v1.32.5+k3s1/k3s
         chmod +x k3s
         sudo mv k3s /usr/local/bin/
         
-        # Utwórz poprawiony plik serwisu systemd dla workera
+        # Create corrected systemd service file for worker
         sudo tee /etc/systemd/system/k3s-agent.service > /dev/null <<EOF
 [Unit]
 Description=Lightweight Kubernetes Agent
@@ -242,65 +266,132 @@ RestartSec=5s
 WantedBy=multi-user.target
 EOF
         
-        # Sprawdź składnię pliku serwisu
+        # Check service file syntax
         sudo systemd-analyze verify /etc/systemd/system/k3s-agent.service
         
-        # Uruchom serwis
+        # Start service
         sudo systemctl daemon-reload
         sudo systemctl enable k3s-agent
         sudo systemctl start k3s-agent
         
-        # Czekaj na uruchomienie
+        # Wait for startup
         sleep 30
         
-        # Sprawdź status
+        # Check status
         sudo systemctl status k3s-agent --no-pager
     "
-    check_command "Instalacja k3s na workerze"
+    check_command "Installing k3s on worker"
 }
 
-# Wykonaj instalację
+# Function to fix k3s-agent service file on worker
+fix_worker_service() {
+    log_info "=== Fixing k3s-agent service file on worker ==="
+    
+    ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$WORKER_IP "
+        # Check if service file has syntax error
+        if [ -f /etc/systemd/system/k3s-agent.service ]; then
+            echo 'Checking k3s-agent service file...'
+            
+            # Check if file has syntax error
+            if ! sudo systemd-analyze verify /etc/systemd/system/k3s-agent.service 2>/dev/null; then
+                echo 'Found syntax error. Fixing service file...'
+                
+                # Create backup
+                sudo cp /etc/systemd/system/k3s-agent.service /etc/systemd/system/k3s-agent.service.backup
+                
+                # Get token from master
+                TOKEN=$(ssh -i ~/.ssh/k8s-infra-key.pem -T -o StrictHostKeyChecking=no -o ProxyCommand="ssh -i ~/.ssh/k8s-infra-key.pem -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "sudo cat /var/lib/rancher/k3s/server/node-token")
+                
+                # Fix service file
+                sudo tee /etc/systemd/system/k3s-agent.service > /dev/null <<EOF
+[Unit]
+Description=Lightweight Kubernetes Agent
+Documentation=https://k3s.io
+After=network-online.target
+
+[Service]
+Type=notify
+ExecStartPre=-/sbin/modprobe br_netfilter
+ExecStartPre=-/sbin/modprobe overlay
+ExecStart=/usr/local/bin/k3s agent --server https://$MASTER_IP:6443 --token $TOKEN
+KillMode=process
+Delegate=yes
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+TasksMax=infinity
+TimeoutStartSec=0
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+                
+                echo 'Service file fixed.'
+                
+                # Reload systemd
+                sudo systemctl daemon-reload
+                
+                # Start service
+                sudo systemctl enable k3s-agent
+                sudo systemctl start k3s-agent
+                
+                echo 'Checking service status...'
+                sudo systemctl status k3s-agent --no-pager -l
+            else
+                echo 'Service file looks correct.'
+            fi
+        else
+            echo 'K3s-agent service file does not exist.'
+        fi
+    "
+    check_command "Fixing k3s-agent service file"
+}
+
+# Execute installation
 install_k3s_master
 fix_master_permissions
 install_k3s_worker
+fix_worker_service
 
-log_info "=== Czekam na gotowość klastra ==="
-# Czekaj na gotowość wszystkich nodów
+log_info "=== Waiting for cluster readiness ==="
+# Wait for all nodes to be ready
 for i in {1..30}; do
-    log_info "Sprawdzanie gotowości klastra (próba $i/30)..."
-    READY_NODES=$(ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "sudo k3s kubectl get nodes --no-headers | grep -c 'Ready'")
+    log_info "Checking cluster readiness (attempt $i/30)..."
+    READY_NODES=$(ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "/usr/local/bin/k3s kubectl get nodes --no-headers | grep -c 'Ready'")
     
     if [ "$READY_NODES" -eq 2 ]; then
-        log_info "Wszystkie nody są gotowe!"
+        log_info "All nodes are ready!"
         break
     fi
     
     if [ $i -eq 30 ]; then
-        log_error "Timeout - klaster nie jest gotowy po 30 próbach"
+        log_error "Timeout - cluster is not ready after 30 attempts"
         exit 1
     fi
     
     sleep 10
 done
 
-log_info "=== Sprawdzanie statusu klastra ==="
-# Sprawdź status klastra
-ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "sudo k3s kubectl get nodes"
-ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "sudo k3s kubectl get pods --all-namespaces"
+log_info "=== Checking cluster status ==="
+# Check cluster status
+ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "/usr/local/bin/k3s kubectl get nodes"
+ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "/usr/local/bin/k3s kubectl get pods --all-namespaces"
 
-log_info "=== Kopiowanie kubeconfig ==="
-# Skopiuj kubeconfig na bastiona i popraw localhost na master IP
+log_info "=== Copying kubeconfig ==="
+# Copy kubeconfig to bastion and fix localhost to master IP
 ssh -i $SSH_KEY -T -o StrictHostKeyChecking=no -o ProxyCommand="ssh -i $SSH_KEY -W %h:%p ec2-user@$BASTION_IP" ec2-user@$MASTER_IP "sudo cat /etc/rancher/k3s/k3s.yaml" | sed "s/127.0.0.1/$MASTER_IP/g" | ssh -i $SSH_KEY ec2-user@$BASTION_IP "cat > ~/k3s.yaml"
-check_command "Kopiowanie kubeconfig na bastion"
+check_command "Copying kubeconfig to bastion"
 
-log_info "=== Instalacja zakończona pomyślnie! ==="
+log_info "=== Installation completed successfully! ==="
 echo ""
-log_info "Aby połączyć się z klastrem z bastiona:"
+log_info "To connect to cluster from bastion:"
 echo "ssh -i ~/.ssh/k8s-infra-key.pem ec2-user@$BASTION_IP"
 echo "export KUBECONFIG=~/k3s.yaml"
 echo "kubectl get nodes"
 echo ""
-log_info "Aby połączyć się z klastrem lokalnie (przez bastion):"
+log_info "To connect to cluster locally (through bastion):"
 echo "ssh -i ~/.ssh/k8s-infra-key.pem -L 6443:$MASTER_IP:6443 ec2-user@$BASTION_IP"
 echo "export KUBECONFIG=~/k3s.yaml"
 echo "kubectl get nodes" 
