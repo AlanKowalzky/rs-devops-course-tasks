@@ -70,5 +70,6 @@ resource "aws_instance" "k3s_node" {
   instance_type          = var.k3s_instance_type
   subnet_id              = element([for subnet in aws_subnet.private : subnet.id], count.index)
   key_name               = var.ssh_key_name
+  vpc_security_group_ids = [aws_security_group.private_workers.id]
   tags = merge(local.common_tags, { Name = "k3s-node-${count.index + 1}" })
 }
