@@ -11,3 +11,4 @@ terraform.tfstate.backup
 .ssh/
 *.pem
 req_*
+install*
