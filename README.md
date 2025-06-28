@@ -165,3 +165,245 @@ To optimize costs (within the Free Tier), a single EC2 instance (`t3.micro`) ful
 *   `public_subnet_cidr_blocks` / `private_subnet_cidr_blocks`: CIDR blocks for the subnets.
 *   `nat_instance_type`: Instance type for the NAT/Bastion (default: `t3.micro` for the Free Tier).
 *   `my_ip_for_ssh`: **(Requires configuration)** Your public IP address from which you'll connect via SSH. This can be set in the `terraform.tfvars` file or as an environment variable.
+
+## Task 3: K8s Cluster Configuration and Creation
+
+## 🎯 Objective
+This project implements a Kubernetes (k3s) cluster on AWS using Terraform, including a bastion host for secure access and automated deployment scripts.
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Local PC      │    │   Bastion Host  │    │   k3s Master    │
+│                 │    │   (Public Subnet)│    │  (Private Subnet)│
+│ kubectl client  │───▶│   SSH Gateway   │───▶│   k3s Server    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │
+                                ▼
+                       ┌─────────────────┐
+                       │   k3s Worker    │
+                       │  (Private Subnet)│
+                       │   k3s Agent     │
+                       └─────────────────┘
+```
+
+## 📁 Project Structure
+
+```
+rs-devops-course-tasks/
+├── main.tf                 # Main Terraform configuration
+├── variables.tf            # Variables for k3s cluster
+├── outputs.tf              # Outputs with cluster information
+├── security_groups.tf      # Security groups for cluster
+├── iam.tf                  # IAM roles and policies
+├── install_k3s.sh          # Automated k3s installation script
+├── deploy_workload.sh      # Workload deployment script
+├── verify_cluster.sh       # Cluster verification script
+├── README.md               # This documentation
+└── diagrams/               # Architecture diagrams
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+- AWS CLI configured
+- Terraform installed
+- SSH key pair in AWS
+- kubectl installed locally
+
+### 1. Infrastructure Deployment
+
+```bash
+# Initialize Terraform
+terraform init
+
+# Plan the deployment
+terraform plan
+
+# Apply the configuration
+terraform apply
+```
+
+### 2. K3s Cluster Installation
+
+```bash
+# Make script executable
+chmod +x install_k3s.sh
+
+# Run k3s installation
+./install_k3s.sh
+```
+
+### 3. Workload Deployment
+
+```bash
+# Make script executable
+chmod +x deploy_workload.sh
+
+# Deploy sample workload
+./deploy_workload.sh
+```
+
+### 4. Cluster Verification
+
+```bash
+# Verify nodes
+kubectl get nodes
+
+# Verify all resources
+kubectl get all --all-namespaces
+
+# Check specific nginx pod
+kubectl get pods -l app=nginx
+```
+
+## 🔧 Configuration
+
+### Terraform Variables
+
+Key variables that need to be configured:
+
+```hcl
+variable "aws_region" {
+  description = "AWS region"
+  default     = "us-west-2"
+}
+
+variable "ssh_key_name" {
+  description = "Name of SSH key pair in AWS"
+  type        = string
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for VPC"
+  default     = "10.0.0.0/16"
+}
+```
+
+### Security Groups
+
+- **Bastion Host**: SSH access from your IP
+- **K3s Master**: Internal cluster communication
+- **K3s Worker**: Internal cluster communication
+
+### IAM Roles
+
+- **Bastion Role**: Basic EC2 permissions
+- **K3s Master Role**: Cluster management permissions
+- **K3s Worker Role**: Node operation permissions
+
+## 📊 Cluster Components
+
+### Bastion Host
+- **Instance Type**: t3.micro (Free Tier)
+- **Subnet**: Public subnet
+- **Purpose**: SSH gateway to private instances
+- **Security**: Restricted SSH access
+
+### K3s Master Node
+- **Instance Type**: t3.micro (Free Tier)
+- **Subnet**: Private subnet
+- **Purpose**: Kubernetes control plane
+- **Components**: k3s server, etcd
+
+### K3s Worker Node
+- **Instance Type**: t3.micro (Free Tier)
+- **Subnet**: Private subnet
+- **Purpose**: Kubernetes worker node
+- **Components**: k3s agent, container runtime
+
+## 🔐 Security Features
+
+- **Private Subnets**: Worker nodes in private subnets
+- **Bastion Access**: Single point of entry through bastion
+- **Security Groups**: Restrictive firewall rules
+- **IAM Roles**: Least privilege access
+- **SSH Keys**: Key-based authentication
+
+## 🛠️ Automation Scripts
+
+### install_k3s.sh
+- Installs k3s on master and worker nodes
+- Configures cluster token and networking
+- Copies kubeconfig to bastion host
+- Sets up SSH tunneling for local access
+
+### deploy_workload.sh
+- Deploys nginx pod from official Kubernetes examples
+- Verifies pod status and accessibility
+- Provides connection information
+
+### verify_cluster.sh
+- Checks cluster health and node status
+- Validates workload deployment
+- Tests network connectivity
+
+## 📈 Monitoring and Troubleshooting
+
+### Common Commands
+
+```bash
+# Check cluster status
+kubectl cluster-info
+
+# View node details
+kubectl describe nodes
+
+# Check pod logs
+kubectl logs <pod-name>
+
+# Access pod shell
+kubectl exec -it <pod-name> -- /bin/bash
+```
+
+### Troubleshooting
+
+1. **SSH Connection Issues**
+   - Verify security group rules
+   - Check SSH key permissions
+   - Ensure bastion host is running
+
+2. **K3s Installation Problems**
+   - Check instance connectivity
+   - Verify token configuration
+   - Review k3s service logs
+
+3. **Workload Deployment Issues**
+   - Check pod status and events
+   - Verify resource availability
+   - Review container logs
+
+## 🧹 Cleanup
+
+```bash
+# Destroy infrastructure
+terraform destroy
+
+# Remove local kubeconfig
+rm -f ~/.kube/config-k3s
+```
+
+## 📚 Additional Resources
+
+- [K3s Documentation](https://docs.k3s.io/)
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [Kubernetes Documentation](https://kubernetes.io/docs/)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is part of the AWS DevOps course tasks.
+
+---
+
+**Author**: [Your Name]  
+**Last Updated**: $(date)  
+**Version**: 1.0.0
