@@ -1,0 +1,27 @@
+graph TD
+  %% Internet Gateway
+  IGW[Internet Gateway (IGW)]
+
+  %% Publiczne podsieci i ich tablica routingu
+  subgraph Public Subnets (public route table)
+    direction LR
+    PubRT[Public Route Table<br/>route 0.0.0.0/0 → IGW]
+    PubSubnet1[Public Subnet 1]
+    PubSubnet2[Public Subnet 2]
+    PubRT --> PubSubnet1
+    PubRT --> PubSubnet2
+  end
+
+  %% Prywatne podsieci i ich tablice routingu (po jednej na AZ)
+  subgraph Private Subnets (private route tables, no internet yet)
+    direction LR
+    PrivRT1[Private Route Table AZ1<br/>local routes only]
+    PrivRT2[Private Route Table AZ2<br/>local routes only]
+    PrivSubnet1[Private Subnet 1 (AZ1)]
+    PrivSubnet2[Private Subnet 2 (AZ2)]
+    PrivRT1 --> PrivSubnet1
+    PrivRT2 --> PrivSubnet2
+  end
+
+  %% Połączenie publicznej tablicy do IGW
+  IGW --> PubRT
