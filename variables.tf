@@ -79,6 +79,7 @@ variable "nat_instance_type" {
 variable "my_ip_for_ssh" {
   description = "Twój publiczny adres IP dla dostępu SSH (w formacie X.X.X.X/32). Używane dla Bastiona i opcjonalnie NAT."
   type        = string
+  default     = "0.0.0.0/0" # Dostęp z dowolnego IP
   sensitive   = true
   # WAŻNE: Ustaw swój publiczny IP, np. przez zmienną środowiskową TF_VAR_my_ip_for_ssh
 }
