@@ -1,37 +1,45 @@
-#!/bin/bash
+#!/bin/sh
 
 # deploy_workload.sh - Deploy sample nginx workload to k3s cluster
 # This script deploys the nginx pod from official Kubernetes examples
 
 set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Colors for output (tput fallback)
+if command -v tput >/dev/null 2>&1; then
+    RED=$(tput setaf 1)
+    GREEN=$(tput setaf 2)
+    YELLOW=$(tput setaf 3)
+    BLUE=$(tput setaf 4)
+    NC=$(tput sgr0)
+else
+    RED=""
+    GREEN=""
+    YELLOW=""
+    BLUE=""
+    NC=""
+fi
 
 # Function to print colored output
 print_status() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    echo "${BLUE}[INFO]${NC} $1"
 }
 
 print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo "${GREEN}[SUCCESS]${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo "${YELLOW}[WARNING]${NC} $1"
 }
 
 print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo "${RED}[ERROR]${NC} $1"
 }
 
 # Check if kubectl is available
 check_kubectl() {
-    if ! command -v kubectl &> /dev/null; then
+    if ! command -v kubectl > /dev/null 2>&1; then
         print_error "kubectl is not installed or not in PATH"
         exit 1
     fi
@@ -42,7 +50,7 @@ check_kubectl() {
 check_cluster() {
     print_status "Checking cluster connectivity..."
     
-    if ! kubectl cluster-info &> /dev/null; then
+    if ! kubectl cluster-info > /dev/null 2>&1; then
         print_error "Cannot connect to cluster. Please ensure:"
         print_error "1. Cluster is running"
         print_error "2. Kubeconfig is properly configured"
@@ -77,8 +85,8 @@ deploy_nginx() {
 wait_for_pod() {
     print_status "Waiting for nginx pod to be ready..."
     
-    local max_attempts=30
-    local attempt=1
+    max_attempts=30
+    attempt=1
     
     while [ $attempt -le $max_attempts ]; do
         if kubectl get pods nginx | grep -q "Running"; then
@@ -88,7 +96,7 @@ wait_for_pod() {
         
         print_status "Attempt $attempt/$max_attempts - Pod not ready yet, waiting..."
         sleep 10
-        ((attempt++))
+        attempt=$((attempt + 1))
     done
     
     print_error "Timeout waiting for nginx pod to be ready"
@@ -118,7 +126,7 @@ test_pod_connectivity() {
     print_status "Testing nginx pod connectivity..."
     
     # Try to get pod logs
-    if kubectl logs nginx &> /dev/null; then
+    if kubectl logs nginx > /dev/null 2>&1; then
         print_success "Pod logs accessible"
         print_status "Recent pod logs:"
         kubectl logs nginx --tail=10
