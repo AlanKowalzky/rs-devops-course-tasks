@@ -49,25 +49,25 @@ variable "vpc_cidr_block" {
 }
 
 variable "availability_zones" {
-  description = "Lista stref dostępności do użycia (minimum 2). Terraform automatycznie wybierze dostępne AZ w danym regionie."
+  description = "Lista stref dostępności do użycia (minimum 1)."
   type        = list(string)
-  default     = ["eu-west-1a", "eu-west-1b"] # Przykładowe AZ dla eu-west-1, dostosuj w razie potrzeby
+  default     = ["eu-west-1a"] # Tylko jedna AZ, by uniknąć kosztów transferu
   validation {
-    condition     = length(var.availability_zones) >= 2
-    error_message = "Należy podać co najmniej dwie strefy dostępności."
+    condition     = length(var.availability_zones) >= 1
+    error_message = "Należy podać co najmniej jedną strefę dostępności."
   }
 }
 
 variable "public_subnet_cidr_blocks" {
   description = "Lista bloków CIDR dla podsieci publicznych (tyle samo co AZ)."
   type        = list(string)
-  default     = ["10.0.1.0/24", "10.0.2.0/24"]
+  default     = ["10.0.1.0/24"]
 }
 
 variable "private_subnet_cidr_blocks" {
   description = "Lista bloków CIDR dla podsieci prywatnych (tyle samo co AZ)."
   type        = list(string)
-  default     = ["10.0.101.0/24", "10.0.102.0/24"]
+  default     = ["10.0.101.0/24"]
 }
 
 variable "nat_instance_type" {
