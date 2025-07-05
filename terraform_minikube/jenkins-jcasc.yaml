@@ -1,0 +1,32 @@
+jenkins:
+  systemMessage: "Jenkins na AWS (Free Tier) – automatyczna konfiguracja JCasC!"
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "admin"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  jobs:
+    - script: |
+        pipelineJob('hello-aws') {
+          definition {
+            cps {
+              script('''
+                pipeline {
+                  agent any
+                  stages {
+                    stage('Hello') {
+                      steps {
+                        echo 'Hello from Jenkins on AWS!'
+                      }
+                    }
+                  }
+                }
+              ''')
+              sandbox(true)
+            }
+          }
+        } 

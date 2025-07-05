@@ -1,16 +1,42 @@
 provider "aws" {
-  region = "eu-west-1" # Region z poprzedniej konfiguracji
+  region = "eu-west-1"
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+
+# Pobierz wszystkie subnety w domyślnej VPC
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
 }
 
 resource "aws_key_pair" "minikube_key" {
   key_name   = "minikube-key"
-  public_key = file("~/.ssh/id_rsa.pub") # Upewnij się, że masz klucz SSH
+  public_key = file("~/.ssh/id_rsa.pub")
 }
 
 resource "aws_security_group" "minikube_sg" {
   name        = "minikube-sg"
   description = "Allow SSH, NodePort, HTTP/HTTPS"
-
   ingress {
     from_port   = 22
     to_port     = 22
@@ -44,18 +70,29 @@ resource "aws_security_group" "minikube_sg" {
 }
 
 resource "aws_instance" "minikube" {
-  ami           = "ami-0a0c8eebcdd6dcbd0" # Ubuntu 22.04 LTS, eu-west-1
-  instance_type = "t3.small"
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t3.medium"
   key_name      = aws_key_pair.minikube_key.key_name
   vpc_security_group_ids = [aws_security_group.minikube_sg.id]
-
-  user_data = file("${path.module}/minikube-setup.sh")
-
+  subnet_id     = data.aws_subnets.default.ids[0]
+  user_data     = file("${path.module}/minikube-setup.sh")
   tags = {
     Name = "minikube-aws"
+  }
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
   }
 }
 
 output "public_ip" {
   value = aws_instance.minikube.public_ip
+}
+
+output "debug_vpc_id" {
+  value = data.aws_vpc.default.id
+}
+
+output "debug_subnet_ids" {
+  value = data.aws_subnets.default.ids
 } 
