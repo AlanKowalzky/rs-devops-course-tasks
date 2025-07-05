@@ -67,12 +67,12 @@ echo "✅ Node gotowy!"
 
 # 2. Czekam na gotowość Jenkins pods (zwiększony timeout)
 echo "🔍 Health Check 2: Jenkins pods..."
-timeout 900 bash -c 'until minikube kubectl -- get pods -n jenkins | grep jenkins | grep -q "Running"; do 
-  echo "⏳ Czekam na Jenkins pods... (status: $(minikube kubectl -- get pods -n jenkins | grep jenkins || echo "Brak podów"))"
+timeout 900 bash -c 'until kubectl get pods --namespace=jenkins | grep jenkins | grep -q "Running"; do 
+  echo "⏳ Czekam na Jenkins pods... (status: $(kubectl get pods --namespace=jenkins | grep jenkins || echo "Brak podów"))"
   sleep 20
 done' || {
   echo "❌ Jenkins pods nie są gotowe po 15 minutach!"
-  minikube kubectl -- get pods -n jenkins
+  kubectl get pods --namespace=jenkins
   exit 1
 }
 echo "✅ Jenkins pods gotowe!"
@@ -113,13 +113,13 @@ timeout 30 minikube kubectl get storageclass || echo "❌ Brak StorageClass!"
 # SEGMENT 2.4: TEST JENKINS PODS
 # =============================================================================
 echo "=== SEGMENT 2.4: Test Jenkins Pods ==="
-timeout 30 minikube kubectl -- get pods -n jenkins | grep jenkins || echo "❌ Brak podów Jenkins!"
+timeout 30 kubectl get pods --namespace=jenkins | grep jenkins || echo "❌ Brak podów Jenkins!"
 
 # =============================================================================
 # SEGMENT 2.5: TEST JENKINS SERVICES
 # =============================================================================
 echo "=== SEGMENT 2.5: Test Jenkins Services ==="
-timeout 30 minikube kubectl get svc -n jenkins | grep jenkins || echo "❌ Brak serwisu Jenkins!"
+timeout 30 kubectl get svc --namespace=jenkins | grep jenkins || echo "❌ Brak serwisu Jenkins!"
 
 # =============================================================================
 # SEGMENT 2.6: TEST JENKINS HTTP
@@ -131,10 +131,10 @@ timeout 30 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080
 # SEGMENT 2.7: TEST JCASC W LOGACH
 # =============================================================================
 echo "=== SEGMENT 2.7: Test JCasC w logach ==="
-JENKINS_POD=$(timeout 30 minikube kubectl get pods -n jenkins | grep jenkins | grep controller | awk '{print $1}')
+JENKINS_POD=$(timeout 30 kubectl get pods --namespace=jenkins | grep jenkins | grep controller | awk '{print $1}')
 if [ -n "$JENKINS_POD" ]; then
   echo "✅ Znaleziono pod Jenkins: $JENKINS_POD"
-  timeout 30 minikube kubectl logs $JENKINS_POD -n jenkins | grep -i "Configuration as Code" || echo "❌ Brak śladów JCasC w logach!"
+  timeout 30 kubectl logs $JENKINS_POD --namespace=jenkins | grep -i "Configuration as Code" || echo "❌ Brak śladów JCasC w logach!"
 else
   echo "❌ Nie znaleziono podu Jenkins controller!"
 fi

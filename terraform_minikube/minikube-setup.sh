@@ -129,6 +129,14 @@ sudo -u ubuntu minikube kubectl get nodes || {
 
 echo "✅ Kubectl działa poprawnie!"
 
+# Konfiguruj kubectl do pracy z Minikube
+echo "Konfiguruję kubectl do pracy z Minikube..."
+sudo -u ubuntu minikube kubectl config view --minify --flatten > /tmp/kubeconfig
+sudo cp /tmp/kubeconfig /root/.kube/config
+sudo chown root:root /root/.kube/config
+sudo chmod 600 /root/.kube/config
+echo "✅ Kubectl skonfigurowane do pracy z Minikube!"
+
 # =============================================================================
 # SEGMENT 6: INSTALACJA HELM
 # =============================================================================
@@ -212,13 +220,18 @@ echo "✅ Plik JCasC skopiowany do /tmp/jenkins-jcasc.yaml"
 # =============================================================================
 echo "=== SEGMENT 9: Instalacja Jenkinsa ==="
 
+echo "Tworzę namespace jenkins (jeśli nie istnieje)..."
+sudo -u ubuntu minikube kubectl create namespace jenkins || echo "Namespace jenkins już istnieje"
+echo "✅ Namespace jenkins gotowy"
+
 echo "Dodaję repozytorium Jenkins Helm..."
 helm repo add jenkins https://charts.jenkins.io
 helm repo update
 echo "✅ Repozytorium Jenkins dodane"
 
-echo "Instaluję Jenkinsa z JCasC..."
+echo "Instaluję Jenkinsa z JCasC w namespace jenkins..."
 timeout 600 sudo -u ubuntu helm install jenkins jenkins/jenkins \
+  --namespace jenkins \
   --set controller.adminPassword=admin \
   --set persistence.enabled=true \
   --set persistence.size=5Gi \
@@ -230,8 +243,8 @@ timeout 600 sudo -u ubuntu helm install jenkins jenkins/jenkins \
   --set controller.serviceType=NodePort \
   --set controller.serviceNodePort=8080 \
   --set-file controller.JCasC.configScripts.jcasc=/tmp/jenkins-jcasc.yaml \
-  --wait" || { echo "❌ Błąd instalacji Jenkinsa Helm!"; exit 1; }
-echo "✅ Jenkins zainstalowany z JCasC!"
+  --wait || { echo "❌ Błąd instalacji Jenkinsa Helm!"; exit 1; }
+echo "✅ Jenkins zainstalowany z JCasC w namespace jenkins!"
 
 # =============================================================================
 # SEGMENT 10: KOŃCOWE SPRAWDZENIE
@@ -249,7 +262,7 @@ echo "3. Helm:"
 helm version || echo "❌ Problem z helm"
 
 echo "4. Jenkins pods:"
-sudo -u ubuntu minikube kubectl -- get pods --namespace=local-path-storage | grep jenkins || echo "❌ Brak podów Jenkins"
+kubectl get pods --namespace=jenkins | grep jenkins || echo "❌ Brak podów Jenkins w namespace jenkins"
 
 echo "✅ SETUP ZAKOŃCZONY SUKCESEM!"
 echo "=== SETUP SUCCESS ==="

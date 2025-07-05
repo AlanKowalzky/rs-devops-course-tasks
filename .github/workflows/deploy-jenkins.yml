@@ -45,12 +45,12 @@ jobs:
         driver: 'docker'
         
     - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
+      uses: azure/setup-kubectl@v4
       with:
         version: 'latest'
         
     - name: Setup Helm
-      uses: azure/setup-helm@v3
+      uses: azure/setup-helm@v4
       with:
         version: 'latest'
         
@@ -120,7 +120,7 @@ jobs:
         
     - name: Upload deployment logs
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: deployment-logs
         path: |
