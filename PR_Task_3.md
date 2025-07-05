@@ -176,7 +176,3 @@ Project has been fully implemented according to Task 3 requirements. All evaluat
 
 ---
 
-**Author**: [Your Name]  
-**Date**: $(date)  
-**Branch**: task_3  
-**Target**: main 

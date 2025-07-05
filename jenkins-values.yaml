@@ -4,6 +4,7 @@ controller:
     password: admin123
   persistence:
     enabled: true
+    storageClass: minikube-hostpath
     size: 1Gi
   resources:
     requests:

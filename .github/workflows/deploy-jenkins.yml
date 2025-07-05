@@ -1,0 +1,135 @@
+name: Deploy Jenkins to Kubernetes
+
+on:
+  push:
+    branches: [ main, task-4 ]
+    paths:
+      - 'jenkins-*.yaml'
+      - 'scripts/redeploy-jenkins.sh'
+      - '.github/workflows/deploy-jenkins.yml'
+  pull_request:
+    branches: [ main, task-4 ]
+    paths:
+      - 'jenkins-*.yaml'
+      - 'scripts/redeploy-jenkins.sh'
+      - '.github/workflows/deploy-jenkins.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'minikube'
+        type: choice
+        options:
+        - minikube
+        - aws-k3s
+
+env:
+  NAMESPACE: jenkins
+  RELEASE: jenkins
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Minikube
+      if: github.event.inputs.environment == 'minikube' || github.event.inputs.environment == null
+      uses: medyagh/setup-minikube@master
+      with:
+        minikube-version: 'latest'
+        kubernetes-version: 'v1.28.0'
+        driver: 'docker'
+        
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+        
+    - name: Setup Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'latest'
+        
+    - name: Add Jenkins Helm repository
+      run: |
+        helm repo add jenkins https://charts.jenkins.io
+        helm repo update
+        
+    - name: Create namespace
+      run: |
+        kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+        
+    - name: Create StorageClass
+      run: |
+        cat <<EOF | kubectl apply -f -
+        apiVersion: storage.k8s.io/v1
+        kind: StorageClass
+        metadata:
+          name: minikube-hostpath
+        provisioner: k8s.io/minikube-hostpath
+        volumeBindingMode: Immediate
+        EOF
+        
+    - name: Deploy Jenkins
+      run: |
+        # Uninstall existing release if exists
+        helm uninstall $RELEASE -n $NAMESPACE || true
+        
+        # Install Jenkins with JCasC
+        helm install $RELEASE jenkins/jenkins \
+          -n $NAMESPACE \
+          -f jenkins-jcasc-values.yaml \
+          --wait \
+          --timeout=10m \
+          --atomic
+          
+    - name: Verify deployment
+      run: |
+        echo "Checking pod status..."
+        kubectl get pods -n $NAMESPACE
+        
+        echo "Checking services..."
+        kubectl get svc -n $NAMESPACE
+        
+        echo "Waiting for Jenkins to be ready..."
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=jenkins -n $NAMESPACE --timeout=300s
+        
+    - name: Get Jenkins admin password
+      run: |
+        echo "Jenkins admin password:"
+        kubectl exec -n $NAMESPACE -c jenkins deployment/$RELEASE -- cat /run/secrets/additional/chart-admin-password 2>/dev/null || \
+        kubectl exec -n $NAMESPACE -c jenkins deployment/$RELEASE -- cat /run/secrets/chart-admin-password 2>/dev/null || \
+        echo "Could not retrieve password"
+        
+    - name: Test Jenkins job
+      run: |
+        echo "Waiting for Jenkins to be fully ready..."
+        sleep 60
+        
+        # Get Jenkins URL
+        JENKINS_URL=$(kubectl get svc -n $NAMESPACE $RELEASE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        if [ -z "$JENKINS_URL" ]; then
+          JENKINS_URL="http://localhost:8080"
+        fi
+        
+        echo "Jenkins URL: $JENKINS_URL"
+        
+    - name: Upload deployment logs
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: deployment-logs
+        path: |
+          deployment-logs/
+        retention-days: 7
+        
+    - name: Create deployment logs
+      run: |
+        mkdir -p deployment-logs
+        kubectl get all -n $NAMESPACE > deployment-logs/k8s-resources.txt
+        kubectl describe pods -n $NAMESPACE > deployment-logs/pod-details.txt
+        kubectl logs -l app.kubernetes.io/name=jenkins -n $NAMESPACE > deployment-logs/jenkins-logs.txt 

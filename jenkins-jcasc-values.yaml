@@ -1,0 +1,51 @@
+controller:
+  serviceType: NodePort
+  persistence:
+    enabled: true
+    storageClass: minikube-hostpath
+    size: 8Gi
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  JCasC:
+    enabled: true
+    configScripts:
+      jenkins-casc: |
+        jenkins:
+          systemMessage: "Jenkins configured automatically by Jenkins Configuration as Code plugin"
+          
+        jobs:
+          - script: |
+              pipelineJob('hello-world') {
+                displayName('Hello World Job')
+                description('Simple freestyle job that writes Hello World to logs')
+                
+                definition {
+                  cps {
+                    script('''
+                      pipeline {
+                        agent any
+                        
+                        stages {
+                          stage('Hello World') {
+                            steps {
+                              echo 'Hello World from Jenkins Pipeline!'
+                              sh 'echo "Hello World from shell command!"'
+                            }
+                          }
+                        }
+                        
+                        post {
+                          always {
+                            echo 'Job completed!'
+                          }
+                        }
+                      }
+                    '''.stripIndent())
+                  }
+                }
+              } 

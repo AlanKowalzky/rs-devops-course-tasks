@@ -1,0 +1,30 @@
+name: Jenkins Minikube Test
+
+on:
+  push:
+    branches: [ task-4 ]
+  pull_request:
+    branches: [ task-4 ]
+
+jobs:
+  bash-syntax:
+    name: 'Check Bash Scripts Syntax'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Bash syntax check (minikube-setup.sh)
+        run: bash -n terraform_minikube/minikube-setup.sh
+      - name: Bash syntax check (test-jenkins-nostorage.sh)
+        run: bash -n scripts/test-jenkins-nostorage.sh
+
+  check-jcasc-diagram:
+    name: 'Check JCasC and Diagram Files'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check JCasC file exists
+        run: test -f terraform_minikube/jenkins-jcasc.yaml
+      - name: Check Mermaid diagram exists
+        run: test -f diagrams/aws-minikube-jenkins.mmd 
