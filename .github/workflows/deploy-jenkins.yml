@@ -87,17 +87,35 @@ jobs:
         
     - name: Deploy Jenkins
       run: |
-        # Uninstall existing release if exists
-        helm uninstall $RELEASE -n $NAMESPACE || true
+        # Check if release exists before uninstalling
+        if helm list -n $NAMESPACE | grep -q $RELEASE; then
+          echo "Uninstalling existing Jenkins release..."
+          helm uninstall $RELEASE -n $NAMESPACE
+        else
+          echo "No existing Jenkins release found, proceeding with fresh installation..."
+        fi
         
         # Install Jenkins with JCasC
+        echo "Installing Jenkins with JCasC..."
+        echo "Using values file: jenkins-jcasc-values.yaml"
+        
         helm install $RELEASE jenkins/jenkins \
           -n $NAMESPACE \
           -f jenkins-jcasc-values.yaml \
           --wait \
           --timeout=10m \
-          --atomic
-          
+          --atomic \
+          --debug || {
+            echo "❌ Jenkins installation failed!"
+            echo "Checking namespace and resources..."
+            kubectl get all -n $NAMESPACE
+            kubectl get pvc -n $NAMESPACE
+            kubectl get storageclass
+            exit 1
+          }
+        
+        echo "✅ Jenkins installed successfully!"
+        
     - name: Verify deployment
       run: |
         echo "Checking pod status..."
