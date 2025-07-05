@@ -1,495 +1,0 @@
-Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 6.8.0-1030-aws x86_64)
-
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/pro
-
- System information as of Sat Jul  5 20:26:17 UTC 2025
-
-  System load:  0.0                Processes:             149
-  Usage of /:   29.6% of 19.20GB   Users logged in:       0
-  Memory usage: 22%                IPv4 address for ens5: 172.31.6.173
-  Swap usage:   0%
-
-
-Expanded Security Maintenance for Applications is not enabled.
-
-9 updates can be applied immediately.
-9 of these updates are standard security updates.
-To see these additional updates run: apt list --upgradable
-
-1 additional security update can be applied with ESM Apps.
-Learn more about enabling ESM Apps service at https://ubuntu.com/esm
-
-
-Last login: Sat Jul  5 20:16:39 2025 from 91.217.198.186
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ 
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # SEGMENT 2.1: TEST MINIKUBE
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ echo "=== SEGMENT 2.1: Test Minikube ==="
-[?2004l=== SEGMENT 2.1: Test Minikube ===
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ timeout 30 minikube status || echo "❌ Minikube NIE działa!"
-[?2004l🤷  Profile "minikube" not found. Run "minikube profile list" to view all profiles.
-👉  To start a cluster, run: "minikube start"
-❌ Minikube NIE działa!
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ 
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # SEGMENT 2.2: TEST HELM
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ echo "=== SEGMENT 2.2: Test Helm ==="
-[?2004l=== SEGMENT 2.2: Test Helm ===
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ timeout 30 helm version || echo "❌ Helm NIE działa!"
-[?2004lversion.BuildInfo{Version:"v3.18.3", GitCommit:"6838ebcf265a3842d1433956e8a622e3290cf324", GitTreeState:"clean", GoVersion:"go1.24.4"}
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ 
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # SEGMENT 2.3: TEST STORAGECLASS
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ echo "=== SEGMENT 2.3: Test StorageClass ==="
-[?2004l=== SEGMENT 2.3: Test StorageClass ===
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ timeout 30 minikube kubectl get storageclass || echo "❌ Brak StorageClass!"
-[?2004lerror: no server found for cluster "minikube"
-❌ Brak StorageClass!
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ 
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # SEGMENT 2.4: TEST JENKINS PODS
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ echo "=== SEGMENT 2.4: Test Jenkins Pods ==="
-[?2004l=== SEGMENT 2.4: Test Jenkins Pods ===
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ timeout 30 minikube kubectl get pods | grep jenkins || echo "❌ Brak podów Jenkins!"
-[?2004lerror: no server found for cluster "minikube"
-❌ Brak podów Jenkins!
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ 
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # SEGMENT 2.5: TEST JENKINS SERVICES
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ echo "=== SEGMENT 2.5: Test Jenkins Services ==="
-[?2004l=== SEGMENT 2.5: Test Jenkins Services ===
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ timeout 30 minikube kubectl get svc | grep jenkins || echo "❌ Brak serwisu Jenkins!"
-[?2004lerror: no server found for cluster "minikube"
-❌ Brak serwisu Jenkins!
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ 
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # SEGMENT 2.6: TEST JENKINS HTTP
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ echo "=== SEGMENT 2.6: Test Jenkins HTTP ==="
-[?2004l=== SEGMENT 2.6: Test Jenkins HTTP ===
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ timeout 30 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080
-[?2004l000
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ 
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # SEGMENT 2.7: TEST JCASC W LOGACH
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ echo "=== SEGMENT 2.7: Test JCasC w logach ==="
-[?2004l=== SEGMENT 2.7: Test JCasC w logach ===
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ JENKINS_POD=$(timeout 30 minikube kubectl get pods | grep jenkins | grep controller | awk '{print $1}')
-[?2004lerror: no server found for cluster "minikube"
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ if [ -n "$JENKINS_POD" ]; then
-[?2004l[?2004h>   echo "✅ Znaleziono pod Jenkins: $JENKINS_POD"
-[?2004l[?2004h>   timeout 30 minikube kubectl logs $JENKINS_POD | grep -i "Configuration as Code" || echo "❌ Brak śladów JCasC w logach!"
-[?2004l[?2004h> else
-[?2004l[?2004h>   echo "❌ Nie znaleziono podu Jenkins controller!"
-[?2004l[?2004h> fi
-[?2004l❌ Nie znaleziono podu Jenkins controller!
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ 
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # SEGMENT 2.8: LOGI CLOUD-INIT CHECKPOINTY
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ echo "=== SEGMENT 2.8: Logi Cloud-init (checkpointy) ==="
-[?2004l=== SEGMENT 2.8: Logi Cloud-init (checkpointy) ===
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ timeout 30 sudo cat /var/log/cloud-init-output.log | grep -E '===|SETUP SUCCESS|✅|❌' || echo "❌ Brak logu cloud-init-output.log lub brak checkpointów"
-[?2004l+ echo '[01;31m[K===[m[K START SETUP [01;31m[K===[m[K'
-[01;31m[K===[m[K START SETUP [01;31m[K===[m[K
-+ echo '[01;31m[K===[m[K SEGMENT 1: Sprawdzanie zasobów systemu [01;31m[K===[m[K'
-[01;31m[K===[m[K SEGMENT 1: Sprawdzanie zasobów systemu [01;31m[K===[m[K
-+ echo '[01;31m[K✅[m[K Wykryto 3836MB RAM - wystarczająco do uruchomienia Jenkinsa.'
-[01;31m[K✅[m[K Wykryto 3836MB RAM - wystarczająco do uruchomienia Jenkinsa.
-+ echo '[01;31m[K===[m[K SEGMENT 2: Aktualizacja systemu i instalacja Docker [01;31m[K===[m[K'
-[01;31m[K===[m[K SEGMENT 2: Aktualizacja systemu i instalacja Docker [01;31m[K===[m[K
-+ echo '[01;31m[K✅[m[K System zaktualizowany'
-[01;31m[K✅[m[K System zaktualizowany
-+ echo '[01;31m[K✅[m[K Docker zainstalowany'
-[01;31m[K✅[m[K Docker zainstalowany
-+ echo '[01;31m[K===[m[K SEGMENT 3: Instalacja kubectl [01;31m[K===[m[K'
-[01;31m[K===[m[K SEGMENT 3: Instalacja kubectl [01;31m[K===[m[K
-+ echo '[01;31m[K✅[m[K kubectl zainstalowany'
-[01;31m[K✅[m[K kubectl zainstalowany
-+ echo '[01;31m[K===[m[K SEGMENT 4: Instalacja Minikube [01;31m[K===[m[K'
-[01;31m[K===[m[K SEGMENT 4: Instalacja Minikube [01;31m[K===[m[K
-+ echo '[01;31m[K✅[m[K Minikube zainstalowany'
-[01;31m[K✅[m[K Minikube zainstalowany
-+ echo '[01;31m[K===[m[K SEGMENT 5: Uruchomienie Minikube [01;31m[K===[m[K'
-[01;31m[K===[m[K SEGMENT 5: Uruchomienie Minikube [01;31m[K===[m[K
-+ echo '[01;31m[K✅[m[K Minikube uruchomiony'
-[01;31m[K✅[m[K Minikube uruchomiony
-+ echo '[01;31m[K===[m[K SEGMENT 6: Instalacja Helm [01;31m[K===[m[K'
-[01;31m[K===[m[K SEGMENT 6: Instalacja Helm [01;31m[K===[m[K
-+ echo '[01;31m[K✅[m[K Helm zainstalowany'
-[01;31m[K✅[m[K Helm zainstalowany
-+ echo '[01;31m[K===[m[K SEGMENT 7: Konfiguracja StorageClass [01;31m[K===[m[K'
-[01;31m[K===[m[K SEGMENT 7: Konfiguracja StorageClass [01;31m[K===[m[K
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ 
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # SEGMENT 2.9: PEŁNY LOG CLOUD-INIT
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ # =============================================================================
-[?2004l[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ echo "=== SEGMENT 2.9: Pełny log Cloud-init ==="
-[?2004l=== SEGMENT 2.9: Pełny log Cloud-init ===
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ timeout 30 sudo cat /var/log/cloud-init-output.log || echo "❌ Brak logu cloud-init-output.log lub brak uprawnień"
-[?2004l
-# =============================================================================
-# SEGMENT 2.10: DIAGNOSTYKA NARZĘDZI
-# =============================================================================
-echo "=== SEGMENT 2.10: Diagnostyka narzędzi ==="
-echo "Sprawdzam lokalizację minikube:"
-which minikube || echo "❌ minikube NIE w PATH"
-echo
-
-echo "Sprawdzam lokalizację helm:"
-which helm || echo "❌ helm NIE w PATH"
-echo
-
-echo "Sprawdzam lokalizację kubectl:"
-which kubectl || echo "❌ kubectl NIE w PATH"
-echo
-
-echo "✅ KONIEC TESTÓW"
-
-Cloud-init v. 25.1.2-0ubuntu0~22.04.2 running 'init-local' at Sat, 05 Jul 2025 20:11:50 +0000. Up 6.29 seconds.
-Cloud-init v. 25.1.2-0ubuntu0~22.04.2 running 'init' at Sat, 05 Jul 2025 20:11:53 +0000. Up 9.19 seconds.
-ci-info: ++++++++++++++++++++++++++++++++++++++Net device info++++++++++++++++++++++++++++++++++++++
-ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
-ci-info: | Device |  Up  |          Address           |      Mask     | Scope  |     Hw-Address    |
-ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
-ci-info: |  ens5  | True |        172.31.6.173        | 255.255.240.0 | global | 02:e3:e6:bf:bd:bf |
-ci-info: |  ens5  | True | fe80::e3:e6ff:febf:bdbf/64 |       .       |  link  | 02:e3:e6:bf:bd:bf |
-ci-info: |   lo   | True |         127.0.0.1          |   255.0.0.0   |  host  |         .         |
-ci-info: |   lo   | True |          ::1/128           |       .       |  host  |         .         |
-ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
-ci-info: +++++++++++++++++++++++++++++Route IPv4 info++++++++++++++++++++++++++++++
-ci-info: +-------+-------------+------------+-----------------+-----------+-------+
-ci-info: | Route | Destination |  Gateway   |     Genmask     | Interface | Flags |
-ci-info: +-------+-------------+------------+-----------------+-----------+-------+
-ci-info: |   0   |   0.0.0.0   | 172.31.0.1 |     0.0.0.0     |    ens5   |   UG  |
-ci-info: |   1   |  172.31.0.0 |  0.0.0.0   |  255.255.240.0  |    ens5   |   U   |
-ci-info: |   2   |  172.31.0.1 |  0.0.0.0   | 255.255.255.255 |    ens5   |   UH  |
-ci-info: |   3   |  172.31.0.2 |  0.0.0.0   | 255.255.255.255 |    ens5   |   UH  |
-ci-info: +-------+-------------+------------+-----------------+-----------+-------+
-ci-info: +++++++++++++++++++Route IPv6 info+++++++++++++++++++
-ci-info: +-------+-------------+---------+-----------+-------+
-ci-info: | Route | Destination | Gateway | Interface | Flags |
-ci-info: +-------+-------------+---------+-----------+-------+
-ci-info: |   1   |  fe80::/64  |    ::   |    ens5   |   U   |
-ci-info: |   3   |    local    |    ::   |    ens5   |   U   |
-ci-info: |   4   |  multicast  |    ::   |    ens5   |   U   |
-ci-info: +-------+-------------+---------+-----------+-------+
-Generating public/private rsa key pair.
-Your identification has been saved in /etc/ssh/ssh_host_rsa_key
-Your public key has been saved in /etc/ssh/ssh_host_rsa_key.pub
-The key fingerprint is:
-SHA256:1mmSVItrPibs4HkAdkEWtXO3ZS76nyN+pyCbaes8hVg root@ip-172-31-6-173
-The key's randomart image is:
-+---[RSA 3072]----+
-|   .+o.   .      |
-|   ..  . o .     |
-|     .o + o o    |
-|  o .  +E= *     |
-| . o   oS.* .    |
-|    ...+.+..     |
-|    ..o *..      |
-|   . +.+oB..o..  |
-|    o..oB+o+++   |
-+----[SHA256]-----+
-Generating public/private ecdsa key pair.
-Your identification has been saved in /etc/ssh/ssh_host_ecdsa_key
-Your public key has been saved in /etc/ssh/ssh_host_ecdsa_key.pub
-The key fingerprint is:
-SHA256:abcSnjedqKjlRj1aJQ1wZNgqMy2p+6ORmxHgOU27k8U root@ip-172-31-6-173
-The key's randomart image is:
-+---[ECDSA 256]---+
-|      .=+        |
-|      .oo        |
-|.  . o . o       |
-|..+ O o ..o      |
-| +.+ E .So.      |
-|  oo+ .o++ + .   |
-|  += ..o+.= o    |
-|  .=ooo. + .     |
-|  +oo+o .        |
-+----[SHA256]-----+
-Generating public/private ed25519 key pair.
-Your identification has been saved in /etc/ssh/ssh_host_ed25519_key
-Your public key has been saved in /etc/ssh/ssh_host_ed25519_key.pub
-The key fingerprint is:
-SHA256:g3ayJ0HMtMOWDAzu6rVLAZq40bnCeFqps8DTjksg1II root@ip-172-31-6-173
-The key's randomart image is:
-+--[ED25519 256]--+
-|  .o. .          |
-|... .B o         |
-|E+..  @          |
-|++o. o o         |
-|B +.  = S        |
-|*+.o.. = .       |
-|*==+  o .        |
-|=** .  o         |
-|+*.+.            |
-+----[SHA256]-----+
-Cloud-init v. 25.1.2-0ubuntu0~22.04.2 running 'modules:config' at Sat, 05 Jul 2025 20:12:04 +0000. Up 20.75 seconds.
-Cloud-init v. 25.1.2-0ubuntu0~22.04.2 running 'modules:final' at Sat, 05 Jul 2025 20:12:06 +0000. Up 21.95 seconds.
-+ echo '=== START SETUP ==='
-=== START SETUP ===
-+ echo '=== SEGMENT 1: Sprawdzanie zasobów systemu ==='
-=== SEGMENT 1: Sprawdzanie zasobów systemu ===
-+ MIN_RAM_MB=2048
-++ awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo
-+ RAM_TOTAL_MB=3836
-+ echo 'RAM: 3836MB'
-RAM: 3836MB
-+ '[' 3836 -lt 2048 ']'
-+ echo '✅ Wykryto 3836MB RAM - wystarczająco do uruchomienia Jenkinsa.'
-✅ Wykryto 3836MB RAM - wystarczająco do uruchomienia Jenkinsa.
-+ echo '=== SEGMENT 2: Aktualizacja systemu i instalacja Docker ==='
-=== SEGMENT 2: Aktualizacja systemu i instalacja Docker ===
-+ echo 'Aktualizuję system...'
-Aktualizuję system...
-+ sudo apt-get update
-Hit:1 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy InRelease
-Get:2 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
-Get:3 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
-Get:4 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
-Get:5 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [14.1 MB]
-Get:6 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy/universe Translation-en [5652 kB]
-Get:7 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy/universe amd64 c-n-f Metadata [286 kB]
-Get:8 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [217 kB]
-Get:9 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy/multiverse Translation-en [112 kB]
-Get:10 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy/multiverse amd64 c-n-f Metadata [8372 B]
-Get:11 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [2711 kB]
-Get:12 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main Translation-en [433 kB]
-Get:13 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [3860 kB]
-Get:14 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/restricted Translation-en [694 kB]
-Get:15 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1219 kB]
-Get:16 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/universe Translation-en [301 kB]
-Get:17 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 c-n-f Metadata [28.7 kB]
-Get:18 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [47.1 kB]
-Get:19 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/multiverse Translation-en [12.0 kB]
-Get:20 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 c-n-f Metadata [592 B]
-Get:21 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [68.8 kB]
-Get:22 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-backports/main Translation-en [11.4 kB]
-Get:23 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-backports/main amd64 c-n-f Metadata [392 B]
-Get:24 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-backports/restricted amd64 c-n-f Metadata [116 B]
-Get:25 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [30.0 kB]
-Get:26 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-backports/universe Translation-en [16.5 kB]
-Get:27 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 c-n-f Metadata [672 B]
-Get:28 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-backports/multiverse amd64 c-n-f Metadata [116 B]
-Get:29 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [2465 kB]
-Get:30 http://security.ubuntu.com/ubuntu jammy-security/main Translation-en [369 kB]
-Get:31 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [3742 kB]
-Get:32 http://security.ubuntu.com/ubuntu jammy-security/restricted Translation-en [675 kB]
-Get:33 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [987 kB]
-Get:34 http://security.ubuntu.com/ubuntu jammy-security/universe Translation-en [213 kB]
-Get:35 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 c-n-f Metadata [21.7 kB]
-Get:36 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [40.3 kB]
-Get:37 http://security.ubuntu.com/ubuntu jammy-security/multiverse Translation-en [8908 B]
-Get:38 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 c-n-f Metadata [368 B]
-Fetched 38.7 MB in 7s (5758 kB/s)
-Reading package lists...
-+ sudo apt-get upgrade -y
-Reading package lists...
-Building dependency tree...
-Reading state information...
-Calculating upgrade...
-The following packages have been kept back:
-  linux-aws linux-headers-aws linux-image-aws
-The following packages will be upgraded:
-  linux-tools-common sudo
-2 upgraded, 0 newly installed, 0 to remove and 3 not upgraded.
-Need to get 1096 kB of archives.
-After this operation, 1024 B of additional disk space will be used.
-Get:1 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 sudo amd64 1.9.9-1ubuntu2.5 [820 kB]
-Get:2 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 linux-tools-common all 5.15.0-143.153 [275 kB]
-dpkg-preconfigure: unable to re-open stdin: No such file or directory
-Fetched 1096 kB in 0s (27.1 MB/s)
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 65985 files and directories currently installed.)
-Preparing to unpack .../sudo_1.9.9-1ubuntu2.5_amd64.deb ...
-Unpacking sudo (1.9.9-1ubuntu2.5) over (1.9.9-1ubuntu2.4) ...
-Preparing to unpack .../linux-tools-common_5.15.0-143.153_all.deb ...
-Unpacking linux-tools-common (5.15.0-143.153) over (5.15.0-142.152) ...
-Setting up sudo (1.9.9-1ubuntu2.5) ...
-Setting up linux-tools-common (5.15.0-143.153) ...
-Processing triggers for man-db (2.10.2-1) ...
-Processing triggers for libc-bin (2.35-0ubuntu3.10) ...
-
-Running kernel seems to be up-to-date.
-
-No services need to be restarted.
-
-No containers need to be restarted.
-
-No user sessions are running outdated binaries.
-
-No VM guests are running outdated hypervisor (qemu) binaries on this host.
-+ echo '✅ System zaktualizowany'
-✅ System zaktualizowany
-+ echo 'Instaluję Docker...'
-Instaluję Docker...
-+ sudo apt-get install -y docker.io
-Reading package lists...
-Building dependency tree...
-Reading state information...
-The following additional packages will be installed:
-  bridge-utils containerd dns-root-data dnsmasq-base pigz runc ubuntu-fan
-Suggested packages:
-  ifupdown aufs-tools cgroupfs-mount | cgroup-lite debootstrap docker-buildx
-  docker-compose-v2 docker-doc rinse zfs-fuse | zfsutils
-The following NEW packages will be installed:
-  bridge-utils containerd dns-root-data dnsmasq-base docker.io pigz runc
-  ubuntu-fan
-0 upgraded, 8 newly installed, 0 to remove and 3 not upgraded.
-Need to get 79.6 MB of archives.
-After this operation, 300 MB of additional disk space will be used.
-Get:1 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy/universe amd64 pigz amd64 2.6-1 [63.6 kB]
-Get:2 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 bridge-utils amd64 1.7-1ubuntu3 [34.4 kB]
-Get:3 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 runc amd64 1.2.5-0ubuntu1~22.04.1 [8093 kB]
-Get:4 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 containerd amd64 1.7.27-0ubuntu1~22.04.1 [37.8 MB]
-Get:5 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 dns-root-data all 2024071801~ubuntu0.22.04.1 [6132 B]
-Get:6 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 dnsmasq-base amd64 2.90-0ubuntu0.22.04.1 [374 kB]
-Get:7 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 docker.io amd64 27.5.1-0ubuntu3~22.04.2 [33.3 MB]
-Get:8 http://eu-west-1.ec2.archive.ubuntu.com/ubuntu jammy/universe amd64 ubuntu-fan all 0.12.16 [35.2 kB]
-dpkg-preconfigure: unable to re-open stdin: No such file or directory
-Fetched 79.6 MB in 1s (89.7 MB/s)
-Selecting previously unselected package pigz.
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 65985 files and directories currently installed.)
-Preparing to unpack .../0-pigz_2.6-1_amd64.deb ...
-Unpacking pigz (2.6-1) ...
-Selecting previously unselected package bridge-utils.
-Preparing to unpack .../1-bridge-utils_1.7-1ubuntu3_amd64.deb ...
-Unpacking bridge-utils (1.7-1ubuntu3) ...
-Selecting previously unselected package runc.
-Preparing to unpack .../2-runc_1.2.5-0ubuntu1~22.04.1_amd64.deb ...
-Unpacking runc (1.2.5-0ubuntu1~22.04.1) ...
-Selecting previously unselected package containerd.
-Preparing to unpack .../3-containerd_1.7.27-0ubuntu1~22.04.1_amd64.deb ...
-Unpacking containerd (1.7.27-0ubuntu1~22.04.1) ...
-Selecting previously unselected package dns-root-data.
-Preparing to unpack .../4-dns-root-data_2024071801~ubuntu0.22.04.1_all.deb ...
-Unpacking dns-root-data (2024071801~ubuntu0.22.04.1) ...
-Selecting previously unselected package dnsmasq-base.
-Preparing to unpack .../5-dnsmasq-base_2.90-0ubuntu0.22.04.1_amd64.deb ...
-Unpacking dnsmasq-base (2.90-0ubuntu0.22.04.1) ...
-Selecting previously unselected package docker.io.
-Preparing to unpack .../6-docker.io_27.5.1-0ubuntu3~22.04.2_amd64.deb ...
-Unpacking docker.io (27.5.1-0ubuntu3~22.04.2) ...
-Selecting previously unselected package ubuntu-fan.
-Preparing to unpack .../7-ubuntu-fan_0.12.16_all.deb ...
-Unpacking ubuntu-fan (0.12.16) ...
-Setting up dnsmasq-base (2.90-0ubuntu0.22.04.1) ...
-Setting up runc (1.2.5-0ubuntu1~22.04.1) ...
-Setting up dns-root-data (2024071801~ubuntu0.22.04.1) ...
-Setting up bridge-utils (1.7-1ubuntu3) ...
-Setting up pigz (2.6-1) ...
-Setting up containerd (1.7.27-0ubuntu1~22.04.1) ...
-Created symlink /etc/systemd/system/multi-user.target.wants/containerd.service → /lib/systemd/system/containerd.service.
-Setting up ubuntu-fan (0.12.16) ...
-Created symlink /etc/systemd/system/multi-user.target.wants/ubuntu-fan.service → /lib/systemd/system/ubuntu-fan.service.
-Setting up docker.io (27.5.1-0ubuntu3~22.04.2) ...
-Adding group `docker' (GID 122) ...
-Done.
-Created symlink /etc/systemd/system/multi-user.target.wants/docker.service → /lib/systemd/system/docker.service.
-Created symlink /etc/systemd/system/sockets.target.wants/docker.socket → /lib/systemd/system/docker.socket.
-Processing triggers for dbus (1.12.20-2ubuntu4.1) ...
-Processing triggers for man-db (2.10.2-1) ...
-
-Running kernel seems to be up-to-date.
-
-No services need to be restarted.
-
-No containers need to be restarted.
-
-No user sessions are running outdated binaries.
-
-No VM guests are running outdated hypervisor (qemu) binaries on this host.
-+ echo '✅ Docker zainstalowany'
-✅ Docker zainstalowany
-+ echo '=== SEGMENT 3: Instalacja kubectl ==='
-=== SEGMENT 3: Instalacja kubectl ===
-+ echo 'Pobieram kubectl...'
-Pobieram kubectl...
-++ curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt
-+ curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0 27 53.7M   27 14.7M    0     0  12.8M      0  0:00:04  0:00:01  0:00:03 12.8M100 53.7M  100 53.7M    0     0  26.1M      0  0:00:02  0:00:02 --:--:-- 26.2M
-+ chmod +x kubectl
-+ sudo mv kubectl /usr/local/bin/
-+ sudo ln -sf /usr/local/bin/kubectl /usr/bin/kubectl
-+ echo '✅ kubectl zainstalowany'
-✅ kubectl zainstalowany
-+ echo '=== SEGMENT 4: Instalacja Minikube ==='
-=== SEGMENT 4: Instalacja Minikube ===
-+ echo 'Pobieram Minikube...'
-Pobieram Minikube...
-+ curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0  126M    0  286k    0     0   268k      0  0:08:03  0:00:01  0:08:02  267k 25  126M   25 32.2M    0     0  15.5M      0  0:00:08  0:00:02  0:00:06 15.5M 59  126M   59 75.6M    0     0  24.7M      0  0:00:05  0:00:03  0:00:02 24.7M 94  126M   94  119M    0     0  29.3M      0  0:00:04  0:00:04 --:--:-- 29.3M100  126M  100  126M    0     0  29.9M      0  0:00:04  0:00:04 --:--:-- 31.4M
-+ sudo install minikube-linux-amd64 /usr/local/bin/minikube
-+ sudo ln -sf /usr/local/bin/minikube /usr/bin/minikube
-+ echo '✅ Minikube zainstalowany'
-✅ Minikube zainstalowany
-+ echo '=== SEGMENT 5: Uruchomienie Minikube ==='
-=== SEGMENT 5: Uruchomienie Minikube ===
-+ echo 'Uruchamiam Minikube na 2 CPU, 2000MB RAM...'
-Uruchamiam Minikube na 2 CPU, 2000MB RAM...
-+ sudo minikube start --driver=docker --cpus=2 --memory=2000mb --force
-* minikube v1.36.0 on Ubuntu 22.04
-! minikube skips various validations when --force is supplied; this may lead to unexpected behavior
-* Using the docker driver based on user configuration
-* The "docker" driver should not be used with root privileges. If you wish to continue as root, use --force.
-* If you are running minikube within a VM, consider using --driver=none:
-*   https://minikube.sigs.k8s.io/docs/reference/drivers/none/
-* Using Docker driver with root privileges
-* Starting "minikube" primary control-plane node in "minikube" cluster
-* Pulling base image v0.0.47 ...
-* Downloading Kubernetes v1.33.1 preload ...
-    > gcr.io/k8s-minikube/kicbase...:  0 B [_______________________] ?% ? p/s ?    > gcr.io/k8s-minikube/kicbase...:  0 B [_______________________] ?% ? p/s ?    > gcr.io/k8s-minikube/kicbase...:  1.61 KiB / 502.26 MiB [>_] 0.00% ? p/s ?    > gcr.io/k8s-minikube/kicbase...:  1.61 KiB / 502.26 MiB  0.00% 2.68 KiB p/    > gcr.io/k8s-minikube/kicbase...:  1.61 KiB / 502.26 MiB  0.00% 2.68 KiB p/    > gcr.io/k8s-minikube/kicbase...:  1.61 KiB / 502.26 MiB  0.00% 2.68 KiB p/    > gcr.io/k8s-minikube/kicbase...:  1.61 KiB / 502.26 MiB  0.00% 2.51 KiB p/    > gcr.io/k8s-minikube/kicbase...:  1.61 KiB / 502.26 MiB  0.00% 2.51 KiB p/    > gcr.io/k8s-minikube/kicbase...:  1.61 KiB / 502.26 MiB  0.00% 2.51 KiB p/    > gcr.io/k8s-minikube/kicbase...:  8.00 MiB / 502.26 MiB  1.59% 883.26 KiB     > gcr.io/k8s-minikube/kicbase...:  8.00 MiB / 502.26 MiB  1.59% 883.26 KiB     > gcr.io/k8s-minikube/kicbase...:  8.00 MiB / 502.26 MiB  1.59% 883.26 KiB     > gcr.io/k8s-minikube/kicbase...:  15.99 MiB / 502.26 MiB  3.18% 1.67 MiB p    > gcr.io/k8s-minikube/kicbase...:  40.00 MiB / 502.26 MiB  7.96% 1.67 MiB p    > gcr.io/k8s-minikube/kicbase...:  40.00 MiB / 502.26 MiB  7.96% 1.67 MiB p    > gcr.io/k8s-minikube/kicbase...:  40.21 MiB / 502.26 MiB  8.00% 4.16 MiB p    > gcr.io/k8s-minikube/kicbase...:  65.05 MiB / 502.26 MiB  12.95% 4.16 MiB     > gcr.io/k8s-minikube/kicbase...:  72.00 MiB / 502.26 MiB  14.34% 4.16 MiB     > gcr.io/k8s-minikube/kicbase...:  73.53 MiB / 502.26 MiB  14.64% 7.47 MiB     > gcr.io/k8s-minikube/kicbase...:  97.91 MiB / 502.26 MiB  19.49% 7.47 MiB     > gcr.io/k8s-minikube/kicbase...:  104.00 MiB / 502.26 MiB  20.71% 7.47 MiB    > gcr.io/k8s-minikube/kicbase...:  105.25 MiB / 502.26 MiB  20.96% 10.39 Mi    > gcr.io/k8s-minikube/kicbase...:  130.38 MiB / 502.26 MiB  25.96% 10.39 Mi    > gcr.io/k8s-minikube/kicbase...:  136.00 MiB / 502.26 MiB  27.08% 10.39 Mi    > gcr.io/k8s-minikube/kicbase...:  150.97 MiB / 502.26 MiB  30.06% 14.66 Mi    > gcr.io/k8s-minikube/kicbase...:  152.00 MiB / 502.26 MiB  30.26% 14.66 Mi    > gcr.io/k8s-minikube/kicbase...:  152.00 MiB / 502.26 MiB  30.26% 14.66 Mi    > gcr.io/k8s-minikube/kicbase...:  152.00 MiB / 502.26 MiB  30.26% 13.82 Mi    > gcr.io/k8s-minikube/kicbase...:  157.10 MiB / 502.26 MiB  31.28% 13.82 Mi    > gcr.io/k8s-minikube/kicbase...:  176.00 MiB / 502.26 MiB  35.04% 13.82 Mi    > gcr.io/k8s-minikube/kicbase...:  184.00 MiB / 502.26 MiB  36.63% 16.38 Mi    > gcr.io/k8s-minikube/kicbase...:  184.00 MiB / 502.26 MiB  36.63% 16.38 Mi    > gcr.io/k8s-minikube/kicbase...:  184.00 MiB / 502.26 MiB  36.63% 16.38 Mi    > gcr.io/k8s-minikube/kicbase...:  184.00 MiB / 502.26 MiB  36.63% 15.32 Mi    > gcr.io/k8s-minikube/kicbase...:  204.77 MiB / 502.26 MiB  40.77% 15.32 Mi    > gcr.io/k8s-minikube/kicbase...:  216.00 MiB / 502.26 MiB  43.01% 15.32 Mi    > gcr.io/k8s-minikube/kicbase...:  216.77 MiB / 502.26 MiB  43.16% 17.86 Mi    > gcr.io/k8s-minikube/kicbase...:  240.52 MiB / 502.26 MiB  47.89% 17.86 Mi    > gcr.io/k8s-minikube/kicbase...:  256.56 MiB / 502.26 MiB  51.08% 17.86 Mi    > gcr.io/k8s-minikube/kicbase...:  264.00 MiB / 502.26 MiB  52.56% 21.78 Mi    > gcr.io/k8s-minikube/kicbase...:  264.00 MiB / 502.26 MiB  52.56% 21.78 Mi    > gcr.io/k8s-minikube/kicbase...:  264.00 MiB / 502.26 MiB  52.56% 21.78 Mi    > gcr.io/k8s-minikube/kicbase...:  264.00 MiB / 502.26 MiB  52.56% 20.37 Mi    > gcr.io/k8s-minikube/kicbase...:  280.00 MiB / 502.26 MiB  55.75% 20.37 Mi    > gcr.io/k8s-minikube/kicbase...:  297.63 MiB / 502.26 MiB  59.26% 20.37 Mi    > gcr.io/k8s-minikube/kicbase...:  318.03 MiB / 502.26 MiB  63.32% 24.87 Mi    > gcr.io/k8s-minikube/kicbase...:  320.00 MiB / 502.26 MiB  63.71% 24.87 Mi    > gcr.io/k8s-minikube/kicbase...:  320.00 MiB / 502.26 MiB  63.71% 24.87 Mi    > gcr.io/k8s-minikube/kicbase...:  332.11 MiB / 502.26 MiB  66.12% 24.78 Mi    > gcr.io/k8s-minikube/kicbase...:  344.63 MiB / 502.26 MiB  68.61% 24.78 Mi    > gcr.io/k8s-minikube/kicbase...:  360.00 MiB / 502.26 MiB  71.68% 24.78 Mi    > gcr.io/k8s-minikube/kicbase...:  368.00 MiB / 502.26 MiB  73.27% 27.03 Mi    > gcr.io/k8s-minikube/kicbase...:  380.64 MiB / 502.26 MiB  75.79% 27.03 Mi    > gcr.io/k8s-minikube/kicbase...:  404.71 MiB / 502.26 MiB  80.58% 27.03 Mi    > gcr.io/k8s-minikube/kicbase...:  408.00 MiB / 502.26 MiB  81.23% 29.60 Mi    > gcr.io/k8s-minikube/kicbase...:  408.28 MiB / 502.26 MiB  81.29% 29.60 Mi    > gcr.io/k8s-minikube/kicbase...:  432.00 MiB / 502.26 MiB  86.01% 29.60 Mi    > gcr.io/k8s-minikube/kicbase...:  432.00 MiB / 502.26 MiB  86.01% 30.27 Mi    > gcr.io/k8s-minikube/kicbase...:  432.00 MiB / 502.26 MiB  86.01% 30.27 Mi    > gcr.io/k8s-minikube/kicbase...:  432.00 MiB / 502.26 MiB  86.01% 30.27 Mi    > gcr.io/k8s-minikube/kicbase...:  432.00 MiB / 502.26 MiB  86.01% 28.32 Mi    > gcr.io/k8s-minikube/kicbase...:  456.00 MiB / 502.26 MiB  90.79% 28.32 Mi    > gcr.io/k8s-minikube/kicbase...:  456.00 MiB / 502.26 MiB  90.79% 28.32 Mi    > gcr.io/k8s-minikube/kicbase...:  473.38 MiB / 502.26 MiB  94.25% 30.95 Mi    > gcr.io/k8s-minikube/kicbase...:  488.00 MiB / 502.26 MiB  97.16% 30.95 Mi    > gcr.io/k8s-minikube/kicbase...:  488.00 MiB / 502.26 MiB  97.16% 30.95 Mi    > gcr.io/k8s-minikube/kicbase...:  500.97 MiB / 502.26 MiB  99.74% 31.92 Mi    > gcr.io/k8s-minikube/kicbase...:  502.26 MiB / 502.26 MiB  100.00% 38.03 M* Creating docker container (CPUs=2, Memory=2000MB) ...
-* Preparing Kubernetes v1.33.1 on Docker 28.1.1 ...
-  - Generating certificates and keys ...
-  - Booting up control plane ...
-  - Configuring RBAC rules ...
-* Configuring bridge CNI (Container Networking Interface) ...
-* Verifying Kubernetes components...
-  - Using image gcr.io/k8s-minikube/storage-provisioner:v5
-* Enabled addons: storage-provisioner, default-storageclass
-
-! /usr/local/bin/kubectl is version 1.31.0, which may have incompatibilities with Kubernetes 1.33.1.
-  - Want kubectl v1.33.1? Try 'minikube kubectl -- get pods -A'
-* Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
-+ echo '✅ Minikube uruchomiony'
-✅ Minikube uruchomiony
-+ echo '=== SEGMENT 6: Instalacja Helm ==='
-=== SEGMENT 6: Instalacja Helm ===
-+ echo 'Instaluję Helm...'
-Instaluję Helm...
-+ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-+ bash
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100 11913  100 11913    0     0  77633      0 --:--:-- --:--:-- --:--:-- 77862
-Downloading https://get.helm.sh/helm-v3.18.3-linux-amd64.tar.gz
-Verifying checksum... Done.
-Preparing to install helm into /usr/local/bin
-helm installed into /usr/local/bin/helm
-+ sudo ln -sf /usr/local/bin/helm /usr/bin/helm
-+ echo '✅ Helm zainstalowany'
-✅ Helm zainstalowany
-+ echo '=== SEGMENT 7: Konfiguracja StorageClass ==='
-=== SEGMENT 7: Konfiguracja StorageClass ===
-+ echo 'Instaluję StorageClass local-path...'
-Instaluję StorageClass local-path...
-+ curl -s https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
-+ minikube kubectl apply -f -
-Error: unknown shorthand flag: 'f' in -f
-See 'minikube kubectl --help' for usage.
-2025-07-05 20:14:28,217 - cc_scripts_user.py[WARNING]: Failed to run module scripts_user (scripts in /var/lib/cloud/instance/scripts)
-2025-07-05 20:14:28,218 - log_util.py[WARNING]: Running module scripts_user (<module 'cloudinit.config.cc_scripts_user' from '/usr/lib/python3/dist-packages/cloudinit/config/cc_scripts_user.py'>) failed
-Cloud-init v. 25.1.2-0ubuntu0~22.04.2 finished at Sat, 05 Jul 2025 20:14:28 +0000. Datasource DataSourceEc2Local.  Up 164.15 seconds
-[?2004h]0;ubuntu@ip-172-31-6-173: ~[01;32mubuntu@ip-172-31-6-173[00m:[01;34m~[00m$ 
