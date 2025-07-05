@@ -1,0 +1,6 @@
+controller:
+  admin:
+    username: admin
+    password: admin123
+  persistence:
+    enabled: false
