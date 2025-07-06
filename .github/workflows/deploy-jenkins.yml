@@ -2,17 +2,19 @@ name: Deploy Jenkins to Kubernetes
 
 on:
   push:
-    branches: [ main, task-4 ]
+    branches: [ task-4 ]
     paths:
       - 'jenkins-*.yaml'
       - 'scripts/redeploy-jenkins.sh'
       - '.github/workflows/deploy-jenkins.yml'
+      - 'terraform_minikube/'
   pull_request:
     branches: [ main, task-4 ]
     paths:
       - 'jenkins-*.yaml'
       - 'scripts/redeploy-jenkins.sh'
       - '.github/workflows/deploy-jenkins.yml'
+      - 'terraform_minikube/'
   workflow_dispatch:
     inputs:
       environment:
@@ -29,7 +31,8 @@ env:
   RELEASE: jenkins
 
 jobs:
-  deploy:
+  setup:
+    name: 'Setup Environment'
     runs-on: ubuntu-latest
     
     steps:
@@ -84,6 +87,30 @@ jobs:
         provisioner: k8s.io/minikube-hostpath
         volumeBindingMode: Immediate
         EOF
+
+  deploy:
+    name: 'Deploy Jenkins'
+    runs-on: ubuntu-latest
+    needs: setup
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v4
+      with:
+        version: 'latest'
+        
+    - name: Setup Helm
+      uses: azure/setup-helm@v4
+      with:
+        version: 'latest'
+        
+    - name: Add Jenkins Helm repository
+      run: |
+        helm repo add jenkins https://charts.jenkins.io
+        helm repo update
         
     - name: Deploy Jenkins
       run: |
@@ -134,6 +161,20 @@ jobs:
         else
           echo "No Jenkins pod found yet"
         fi
+
+  test:
+    name: 'Test Jenkins'
+    runs-on: ubuntu-latest
+    needs: deploy
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v4
+      with:
+        version: 'latest'
         
     - name: Verify deployment
       run: |
@@ -152,19 +193,6 @@ jobs:
         kubectl exec -n $NAMESPACE -c jenkins deployment/$RELEASE -- cat /run/secrets/additional/chart-admin-password 2>/dev/null || \
         kubectl exec -n $NAMESPACE -c jenkins deployment/$RELEASE -- cat /run/secrets/chart-admin-password 2>/dev/null || \
         echo "Could not retrieve password"
-        
-    - name: Test Jenkins job
-      run: |
-        echo "Waiting for Jenkins to be fully ready..."
-        sleep 60
-        
-        # Get Jenkins URL
-        JENKINS_URL=$(kubectl get svc -n $NAMESPACE $RELEASE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-        if [ -z "$JENKINS_URL" ]; then
-          JENKINS_URL="http://localhost:8080"
-        fi
-        
-        echo "Jenkins URL: $JENKINS_URL"
         
     - name: Test persistent volume configuration
       run: |
@@ -197,6 +225,20 @@ jobs:
         # Create Hello World job using Jenkins CLI or API
         # Note: This is a simplified test - in real scenario you'd use Jenkins API
         echo "✅ Hello World project test completed (simplified)"
+
+  verify:
+    name: 'Verify Configuration'
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v4
+      with:
+        version: 'latest'
         
     - name: Verify JCasC configuration
       run: |
@@ -220,8 +262,6 @@ jobs:
         
         echo "=== kubectl get all -n jenkins ==="
         kubectl get all -n jenkins
-        
-        echo "✅ All resources displayed"
         
     - name: Upload deployment logs
       if: always()
