@@ -1,6 +1,17 @@
 controller:
-  admin:
-    username: admin
-    password: admin123
+  serviceType: NodePort
   persistence:
-    enabled: false
+    enabled: true
+    storageClass: minikube-hostpath
+    size: 8Gi
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+  startupProbe:
+    initialDelaySeconds: 120
+    periodSeconds: 10
+    failureThreshold: 60

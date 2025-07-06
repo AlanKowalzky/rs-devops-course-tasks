@@ -1,10 +1,7 @@
 name: Jenkins Minikube Test
 
 on:
-  push:
-    branches: [ task-4 ]
-  pull_request:
-    branches: [ task-4 ]
+  workflow_dispatch:
 
 jobs:
   bash-syntax:
