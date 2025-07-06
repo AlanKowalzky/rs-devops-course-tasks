@@ -116,6 +116,25 @@ jobs:
         
         echo "✅ Jenkins installed successfully!"
         
+        # Add diagnostics
+        echo "=== DIAGNOSTICS ==="
+        echo "Checking pods in jenkins namespace:"
+        kubectl get pods -n jenkins
+        
+        echo "Checking PVC in jenkins namespace:"
+        kubectl get pvc -n jenkins
+        
+        echo "Checking events in jenkins namespace:"
+        kubectl get events -n jenkins --sort-by='.lastTimestamp'
+        
+        echo "Checking pod details (if exists):"
+        JENKINS_POD=$(kubectl get pods -n jenkins -l app.kubernetes.io/name=jenkins -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "no-pod")
+        if [ "$JENKINS_POD" != "no-pod" ]; then
+          kubectl describe pod $JENKINS_POD -n jenkins
+        else
+          echo "No Jenkins pod found yet"
+        fi
+        
     - name: Verify deployment
       run: |
         echo "Checking pod status..."
