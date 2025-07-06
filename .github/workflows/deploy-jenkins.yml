@@ -328,3 +328,23 @@ jobs:
         kubectl port-forward svc/jenkins 8080:8080 -n jenkins &
         sleep 10
         curl -I http://localhost:8080/login 
+
+    - name: Run Hello World pipeline
+      run: |
+        kubectl port-forward svc/jenkins 8080:8080 -n jenkins &
+        sleep 15
+        # Wywołaj build pipeline przez REST API
+        curl -X POST "http://admin:admin@localhost:8080/job/hello-world/build" -s -o /dev/null -w "%{http_code}\n"
+        # Poczekaj na pojawienie się builda
+        sleep 20
+        # Pobierz numer ostatniego buildu
+        BUILD_NUM=$(curl -s "http://admin:admin@localhost:8080/job/hello-world/api/json" | grep -o 'lastBuild":{"number":[0-9]*' | grep -o '[0-9]*$')
+        echo "Last build number: $BUILD_NUM"
+        # Sprawdź status buildu
+        STATUS=$(curl -s "http://admin:admin@localhost:8080/job/hello-world/$BUILD_NUM/api/json" | grep -o 'result":"[A-Z]*' | cut -d'"' -f2)
+        echo "Build status: $STATUS"
+        if [ "$STATUS" != "SUCCESS" ]; then
+          echo "Hello World pipeline failed!"
+          exit 1
+        fi
+        echo "Hello World pipeline succeeded!" 
