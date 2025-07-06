@@ -332,11 +332,24 @@ jobs:
     - name: Run Hello World pipeline
       run: |
         kubectl port-forward svc/jenkins 8080:8080 -n jenkins &
-        sleep 15
+        sleep 45
+        # Sprawdź czy job istnieje
+        for i in {1..10}; do
+          JOB_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" "http://admin:admin@localhost:8080/job/hello-world/api/json")
+          if [ "$JOB_EXISTS" = "200" ]; then
+            echo "Job hello-world istnieje."
+            break
+          fi
+          echo "Czekam na utworzenie joba hello-world... ($i)"
+          sleep 6
+        done
+        if [ "$JOB_EXISTS" != "200" ]; then
+          echo "Job hello-world nie został utworzony przez CasC!"
+          exit 1
+        fi
         # Wywołaj build pipeline przez REST API
         curl -X POST "http://admin:admin@localhost:8080/job/hello-world/build" -s -o /dev/null -w "%{http_code}\n"
-        # Poczekaj na pojawienie się builda
-        sleep 20
+        sleep 25
         # Pobierz numer ostatniego buildu
         BUILD_NUM=$(curl -s "http://admin:admin@localhost:8080/job/hello-world/api/json" | grep -o 'lastBuild":{"number":[0-9]*' | grep -o '[0-9]*$')
         echo "Last build number: $BUILD_NUM"
@@ -345,6 +358,8 @@ jobs:
         echo "Build status: $STATUS"
         if [ "$STATUS" != "SUCCESS" ]; then
           echo "Hello World pipeline failed!"
+          echo "Logi joba:"
+          curl -s "http://admin:admin@localhost:8080/job/hello-world/$BUILD_NUM/consoleText"
           exit 1
         fi
         echo "Hello World pipeline succeeded!" 
