@@ -1,6 +1,9 @@
 name: Deploy Jenkins to Kubernetes
 
 on:
+  push:
+    branches:
+      - task-4
   workflow_dispatch:
     inputs:
       environment:
