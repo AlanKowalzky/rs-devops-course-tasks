@@ -46,6 +46,8 @@ jobs:
         minikube-version: 'latest'
         kubernetes-version: 'v1.28.0'
         driver: 'docker'
+        cpus: '4'
+        memory: '8192'
         
     - name: Setup kubectl
       uses: azure/setup-kubectl@v4
@@ -106,7 +108,7 @@ jobs:
           -n $NAMESPACE \
           -f jenkins-jcasc-values.yaml \
           --wait \
-          --timeout=10m \
+          --timeout=20m \
           --atomic \
           --debug || {
             echo "❌ Jenkins installation failed!"
@@ -114,6 +116,21 @@ jobs:
             kubectl get all -n $NAMESPACE
             kubectl get pvc -n $NAMESPACE
             kubectl get storageclass
+            
+            # Additional diagnostics
+            echo "=== POD STATUS ==="
+            kubectl get pods -n $NAMESPACE -o wide
+            
+            echo "=== POD EVENTS ==="
+            kubectl get events -n $NAMESPACE --sort-by='.lastTimestamp'
+            
+            echo "=== POD LOGS (if exists) ==="
+            JENKINS_POD=$(kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=jenkins -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "no-pod")
+            if [ "$JENKINS_POD" != "no-pod" ]; then
+              kubectl describe pod $JENKINS_POD -n $NAMESPACE
+              kubectl logs $JENKINS_POD -n $NAMESPACE --tail=50 || echo "No logs available"
+            fi
+            
             exit 1
           }
         
@@ -122,7 +139,7 @@ jobs:
         # Add diagnostics
         echo "=== DIAGNOSTICS ==="
         echo "Checking pods in jenkins namespace:"
-        kubectl get pods -n jenkins
+        kubectl get pods -n jenkins -o wide
         
         echo "Checking PVC in jenkins namespace:"
         kubectl get pvc -n jenkins
@@ -134,9 +151,18 @@ jobs:
         JENKINS_POD=$(kubectl get pods -n jenkins -l app.kubernetes.io/name=jenkins -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "no-pod")
         if [ "$JENKINS_POD" != "no-pod" ]; then
           kubectl describe pod $JENKINS_POD -n jenkins
+          echo "=== POD LOGS ==="
+          kubectl logs $JENKINS_POD -n jenkins --tail=50 || echo "No logs available"
         else
           echo "No Jenkins pod found yet"
         fi
+        
+        echo "=== MINIKUBE STATUS ==="
+        minikube status || echo "Minikube status check failed"
+        
+        echo "=== CLUSTER RESOURCES ==="
+        kubectl get nodes -o wide
+        kubectl top nodes || echo "Top nodes not available"
         
     - name: Verify deployment
       run: |
@@ -147,7 +173,7 @@ jobs:
         kubectl get svc -n $NAMESPACE
         
         echo "Waiting for Jenkins to be ready..."
-        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=jenkins -n $NAMESPACE --timeout=300s
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=jenkins -n $NAMESPACE --timeout=600s
         
     - name: Get Jenkins admin password
       run: |

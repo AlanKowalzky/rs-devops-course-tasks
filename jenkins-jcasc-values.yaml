@@ -20,32 +20,11 @@ controller:
           
         jobs:
           - script: |
-              pipelineJob('hello-world') {
+              freestyleJob('hello-world') {
                 displayName('Hello World Job')
                 description('Simple freestyle job that writes Hello World to logs')
                 
-                definition {
-                  cps {
-                    script('''
-                      pipeline {
-                        agent any
-                        
-                        stages {
-                          stage('Hello World') {
-                            steps {
-                              echo 'Hello World from Jenkins Pipeline!'
-                              sh 'echo "Hello World from shell command!"'
-                            }
-                          }
-                        }
-                        
-                        post {
-                          always {
-                            echo 'Job completed!'
-                          }
-                        }
-                      }
-                    '''.stripIndent())
-                  }
+                steps {
+                  shell('echo "Hello World from Jenkins!"')
                 }
               } 
