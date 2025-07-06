@@ -319,3 +319,12 @@ jobs:
         
         echo "=== kubectl get all -n jenkins ==="
         kubectl get all -n jenkins 
+
+    - name: Show Jenkins logs
+      run: kubectl logs pod/jenkins-0 -n jenkins --tail=100 
+
+    - name: Test Jenkins HTTP
+      run: |
+        kubectl port-forward svc/jenkins 8080:8080 -n jenkins &
+        sleep 10
+        curl -I http://localhost:8080/login 
