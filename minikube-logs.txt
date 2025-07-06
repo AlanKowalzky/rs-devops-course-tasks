@@ -1,0 +1,44 @@
+
+==> Audit <==
+|----------------|---------------------|----------|--------------------|---------|----------------------|----------------------|
+|    Command     |        Args         | Profile  |        User        | Version |      Start Time      |       End Time       |
+|----------------|---------------------|----------|--------------------|---------|----------------------|----------------------|
+| start          | --driver=docker     | minikube | tome\tome7HPrem64b | v1.36.0 | 03 Jul 25 16:52 CEST |                      |
+| start          |                     | minikube | tome\tome7HPrem64b | v1.36.0 | 03 Jul 25 16:56 CEST |                      |
+| start          | --driver=virtualbox | minikube | tome\tome7HPrem64b | v1.36.0 | 03 Jul 25 17:11 CEST |                      |
+| start          |                     | minikube | tome\tome7HPrem64b | v1.36.0 | 04 Jul 25 11:37 CEST |                      |
+| update-context |                     | minikube | tome\tome7HPrem64b | v1.36.0 | 04 Jul 25 12:00 CEST |                      |
+| update-context |                     | minikube | tome\tome7HPrem64b | v1.36.0 | 04 Jul 25 12:03 CEST | 04 Jul 25 12:03 CEST |
+| delete         |                     | minikube | tome\tome7HPrem64b | v1.36.0 | 05 Jul 25 14:03 CEST | 05 Jul 25 14:03 CEST |
+| start          | --driver=docker     | minikube | tome\tome7HPrem64b | v1.36.0 | 05 Jul 25 14:03 CEST |                      |
+|----------------|---------------------|----------|--------------------|---------|----------------------|----------------------|
+
+
+==> Last Start <==
+Log file created at: 2025/07/05 14:03:57
+Running on machine: tome
+Binary: Built with gc go1.24.0 for windows/amd64
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0705 14:03:57.511247   11440 out.go:345] Setting OutFile to fd 448 ...
+I0705 14:03:57.513927   11440 out.go:397] isatty.IsTerminal(448) = true
+I0705 14:03:57.513927   11440 out.go:358] Setting ErrFile to fd 448...
+I0705 14:03:57.513927   11440 out.go:397] isatty.IsTerminal(448) = true
+I0705 14:03:57.862437   11440 out.go:352] Setting JSON to false
+I0705 14:03:57.874584   11440 start.go:130] hostinfo: {"hostname":"tome","uptime":132166,"bootTime":1751584871,"procs":224,"os":"windows","platform":"Microsoft Windows 10 Home","platformFamily":"Standalone Workstation","platformVersion":"10.0.19045.5965 Build 19045.5965","kernelVersion":"10.0.19045.5965 Build 19045.5965","kernelArch":"x86_64","virtualizationSystem":"","virtualizationRole":"","hostId":"f04bf700-28ee-4c6e-80e9-ce06fa7cb13e"}
+W0705 14:03:57.874584   11440 start.go:138] gopshost.Virtualization returned error: not implemented yet
+I0705 14:03:57.909781   11440 out.go:177] 😄  minikube v1.36.0 on Microsoft Windows 10 Home 10.0.19045.5965 Build 19045.5965
+I0705 14:03:57.993773   11440 notify.go:220] Checking for updates...
+I0705 14:03:58.000806   11440 driver.go:404] Setting default libvirt URI to qemu:///system
+W0705 14:03:58.327148   11440 docker.go:181] docker version returned error: exit status 1
+I0705 14:03:58.336337   11440 out.go:177] ✨  Using the docker driver based on user configuration
+I0705 14:03:58.358513   11440 start.go:304] selected driver: docker
+I0705 14:03:58.364352   11440 start.go:908] validating driver "docker" against <nil>
+I0705 14:03:58.364352   11440 start.go:919] status for docker: {Installed:true Healthy:false Running:true NeedsImprovement:false Error:"docker version --format {{.Server.Os}}-{{.Server.Version}}:{{.Server.Platform.Name}}" exit status 1: error during connect: Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.48/version": open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified. Reason:PROVIDER_DOCKER_VERSION_EXIT_1 Fix: Doc:https://minikube.sigs.k8s.io/docs/drivers/docker/ Version:}
+I0705 14:03:58.370636   11440 out.go:201] 
+W0705 14:03:58.435206   11440 out.go:270] 💣  Exiting due to PROVIDER_DOCKER_VERSION_EXIT_1: "docker version --format <no value>-<no value>:<no value>" exit status 1: error during connect: Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.48/version": open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.
+W0705 14:03:58.437218   11440 out.go:270] 📘  Documentation: https://minikube.sigs.k8s.io/docs/drivers/docker/
+I0705 14:03:58.455220   11440 out.go:201] 
+
+
+* Profile "minikube" not found. Run "minikube profile list" to view all profiles.
+  To start a cluster, run: "minikube start"

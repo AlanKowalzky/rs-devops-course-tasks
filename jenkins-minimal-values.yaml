@@ -1,0 +1,15 @@
+controller:
+  serviceType: NodePort
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  startupProbe:
+    initialDelaySeconds: 60  # Poczekaj 1 minutę zanim zaczniesz sprawdzać
+    periodSeconds: 10        # Sprawdzaj co 10 sekund
+    failureThreshold: 30     # Daj mu 30 szans (czyli 30 * 10s = 300s = 5 minut na start) 

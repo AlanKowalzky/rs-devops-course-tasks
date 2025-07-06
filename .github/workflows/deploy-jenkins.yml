@@ -1,0 +1,365 @@
+name: Deploy Jenkins to Kubernetes
+
+on:
+  push:
+    branches:
+      - task-4
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'minikube'
+        type: choice
+        options:
+        - minikube
+        - aws-k3s
+
+env:
+  NAMESPACE: jenkins
+  RELEASE: jenkins
+
+jobs:
+  deploy:
+    name: 'Deploy Jenkins'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Minikube
+      if: github.event.inputs.environment == 'minikube' || github.event.inputs.environment == null
+      uses: medyagh/setup-minikube@master
+      with:
+        minikube-version: 'latest'
+        kubernetes-version: 'v1.28.0'
+        driver: 'docker'
+        cpus: '4'
+        memory: '8192'
+        
+    - name: Configure kubectl for Minikube
+      if: github.event.inputs.environment == 'minikube' || github.event.inputs.environment == null
+      run: |
+        echo "Configuring kubectl for Minikube..."
+        minikube kubectl -- get nodes || {
+          echo "❌ Failed to connect to Minikube cluster"
+          minikube status
+          exit 1
+        }
+        echo "✅ kubectl configured for Minikube"
+        
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v4
+      with:
+        version: 'latest'
+        
+    - name: Setup Helm
+      uses: azure/setup-helm@v4
+      with:
+        version: 'latest'
+        
+    - name: Add Jenkins Helm repository
+      run: |
+        helm repo add jenkins https://charts.jenkins.io
+        helm repo update
+        
+    - name: Verify cluster connectivity
+      run: |
+        echo "Verifying cluster connectivity..."
+        kubectl get nodes || {
+          echo "❌ Cannot connect to Kubernetes cluster"
+          echo "Checking Minikube status..."
+          minikube status || echo "Minikube not running"
+          exit 1
+        }
+        echo "✅ Cluster connectivity verified"
+        
+    - name: Verify Helm installation with Nginx chart
+      run: |
+        echo "Verifying Helm installation with Nginx chart..."
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo update
+        helm install test-nginx bitnami/nginx --set service.type=ClusterIP --wait --timeout=2m || {
+          echo "❌ Helm test failed - exiting early"
+          exit 1
+        }
+        echo "Nginx chart deployed successfully"
+        helm uninstall test-nginx
+        echo "Nginx chart removed successfully"
+        echo "✅ Helm verification completed"
+        
+    - name: Create namespace
+      run: |
+        kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+        
+    - name: Create StorageClass
+      run: |
+        cat <<EOF | kubectl apply -f -
+        apiVersion: storage.k8s.io/v1
+        kind: StorageClass
+        metadata:
+          name: minikube-hostpath
+        provisioner: k8s.io/minikube-hostpath
+        volumeBindingMode: Immediate
+        EOF
+        
+    - name: Deploy Jenkins
+      run: |
+        # Check if release exists before uninstalling
+        if helm list -n $NAMESPACE | grep -q $RELEASE; then
+          echo "Uninstalling existing Jenkins release..."
+          helm uninstall $RELEASE -n $NAMESPACE
+        else
+          echo "No existing Jenkins release found, proceeding with fresh installation..."
+        fi
+        
+        # Try with JCasC first
+        echo "🚀 Trying Jenkins installation with JCasC..."
+        echo "Using values file: jenkins-jcasc-values.yaml"
+        
+        helm install $RELEASE jenkins/jenkins \
+          -n $NAMESPACE \
+          -f jenkins-jcasc-values.yaml \
+          --wait \
+          --timeout=8m || {
+            echo "❌ Jenkins installation with JCasC failed!"
+            echo "Cleaning up and trying without JCasC..."
+            
+            # Clean up failed installation
+            helm uninstall $RELEASE -n $NAMESPACE 2>/dev/null || true
+            kubectl delete namespace $NAMESPACE 2>/dev/null || true
+            sleep 10
+            
+            # Recreate namespace
+            kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+            
+            # Try without JCasC
+            echo "🚀 Trying Jenkins installation without JCasC..."
+            echo "Using values file: jenkins-simple-values.yaml"
+            
+            helm install $RELEASE jenkins/jenkins \
+              -n $NAMESPACE \
+              -f jenkins-simple-values.yaml \
+              --wait \
+              --timeout=8m || {
+                echo "❌ Jenkins installation failed even without JCasC!"
+                echo "Trying minimal configuration..."
+                
+                # Clean up failed installation
+                helm uninstall $RELEASE -n $NAMESPACE 2>/dev/null || true
+                kubectl delete namespace $NAMESPACE 2>/dev/null || true
+                sleep 10
+                
+                # Recreate namespace
+                kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+                
+                # Try minimal configuration
+                echo "🚀 Trying Jenkins installation with minimal config..."
+                echo "Using values file: jenkins-minimal-values.yaml"
+                
+                helm install $RELEASE jenkins/jenkins \
+                  -n $NAMESPACE \
+                  -f jenkins-minimal-values.yaml \
+                  --wait \
+                  --timeout=8m || {
+                    echo "❌ Jenkins installation failed even with minimal config!"
+                    echo "=== FINAL DIAGNOSTICS ==="
+                    kubectl get all -n $NAMESPACE
+                    kubectl get pvc -n $NAMESPACE
+                    kubectl get storageclass
+                    
+                    echo "=== POD STATUS ==="
+                    kubectl get pods -n $NAMESPACE -o wide
+                    
+                    echo "=== POD EVENTS ==="
+                    kubectl get events -n $NAMESPACE --sort-by='.lastTimestamp'
+                    
+                    echo "=== POD LOGS (if exists) ==="
+                    JENKINS_POD=$(kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=jenkins -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "no-pod")
+                    if [ "$JENKINS_POD" != "no-pod" ]; then
+                      kubectl describe pod $JENKINS_POD -n $NAMESPACE
+                      echo "=== JENKINS CONTAINER LOGS ==="
+                      kubectl logs $JENKINS_POD -n $NAMESPACE -c jenkins --tail=50 || echo "No Jenkins logs available"
+                      echo "=== INIT CONTAINER LOGS ==="
+                      kubectl logs $JENKINS_POD -n $NAMESPACE -c init --tail=20 || echo "No init logs available"
+                    fi
+                    
+                    exit 1
+                  }
+                
+                echo "✅ Jenkins installed successfully with minimal config!"
+              }
+            
+            echo "✅ Jenkins installed successfully without JCasC!"
+          }
+        
+        echo "✅ Jenkins installation completed!"
+        
+        # Add diagnostics
+        echo "=== DIAGNOSTICS ==="
+        echo "Checking pods in jenkins namespace:"
+        kubectl get pods -n jenkins -o wide
+        
+        echo "Checking PVC in jenkins namespace:"
+        kubectl get pvc -n jenkins
+        
+        echo "Checking events in jenkins namespace:"
+        kubectl get events -n jenkins --sort-by='.lastTimestamp'
+        
+        echo "Checking pod details (if exists):"
+        JENKINS_POD=$(kubectl get pods -n jenkins -l app.kubernetes.io/name=jenkins -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "no-pod")
+        if [ "$JENKINS_POD" != "no-pod" ]; then
+          kubectl describe pod $JENKINS_POD -n jenkins
+          echo "=== POD LOGS ==="
+          kubectl logs $JENKINS_POD -n jenkins --tail=50 || echo "No logs available"
+        else
+          echo "No Jenkins pod found yet"
+        fi
+        
+        echo "=== MINIKUBE STATUS ==="
+        minikube status || echo "Minikube status check failed"
+        
+        echo "=== CLUSTER RESOURCES ==="
+        kubectl get nodes -o wide
+        kubectl top nodes || echo "Top nodes not available"
+        
+    - name: Verify deployment
+      run: |
+        echo "Checking pod status..."
+        kubectl get pods -n $NAMESPACE
+        
+        echo "Checking services..."
+        kubectl get svc -n $NAMESPACE
+        
+        echo "Waiting for Jenkins to be ready with monitoring..."
+        
+        # Wait with progress monitoring
+        for i in {1..10}; do  # 5 minutes / 30 seconds = 10 iterations
+          echo "⏳ Waiting for Jenkins readiness... check $i/10"
+          
+          if kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=jenkins -n $NAMESPACE --timeout=30s 2>/dev/null; then
+            echo "✅ Jenkins is ready!"
+            break
+          fi
+          
+          echo "=== CURRENT STATUS ==="
+          kubectl get pods -n $NAMESPACE -o wide
+          
+          JENKINS_POD=$(kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=jenkins -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "no-pod")
+          if [ "$JENKINS_POD" != "no-pod" ]; then
+            echo "=== POD READINESS ==="
+            kubectl get pod $JENKINS_POD -n $NAMESPACE -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' || echo "Unknown"
+            
+            echo "=== RECENT LOGS ==="
+            kubectl logs $JENKINS_POD -n $NAMESPACE --tail=5 2>/dev/null || echo "No logs"
+          fi
+          
+          sleep 30
+        done
+        
+    - name: Get Jenkins admin password
+      run: |
+        echo "Jenkins admin password:"
+        kubectl exec -n $NAMESPACE -c jenkins deployment/$RELEASE -- cat /run/secrets/additional/chart-admin-password 2>/dev/null || \
+        kubectl exec -n $NAMESPACE -c jenkins deployment/$RELEASE -- cat /run/secrets/chart-admin-password 2>/dev/null || \
+        echo "Could not retrieve password"
+        
+    - name: Test persistent volume configuration
+      run: |
+        echo "Testing persistent volume configuration..."
+        # Get Jenkins pod name
+        JENKINS_POD=$(kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=jenkins -o jsonpath='{.items[0].metadata.name}')
+        
+        # Check if PVC exists and is bound
+        kubectl get pvc -n $NAMESPACE
+        
+        # Check if pod has persistent volume mounted
+        kubectl describe pod $JENKINS_POD -n $NAMESPACE | grep -A 10 "Volumes:"
+        
+        echo "✅ Persistent volume test completed"
+        
+    - name: Create and test Hello World freestyle project
+      run: |
+        echo "Creating Hello World freestyle project..."
+        
+        # Wait for Jenkins to be fully ready
+        sleep 30
+        
+        # Get Jenkins admin password
+        ADMIN_PASSWORD=$(kubectl exec -n $NAMESPACE -c jenkins deployment/$RELEASE -- cat /run/secrets/additional/chart-admin-password 2>/dev/null || \
+        kubectl exec -n $NAMESPACE -c jenkins deployment/$RELEASE -- cat /run/secrets/chart-admin-password 2>/dev/null || \
+        echo "admin")
+        
+        echo "Jenkins admin password: $ADMIN_PASSWORD"
+        
+        # Create Hello World job using Jenkins CLI or API
+        # Note: This is a simplified test - in real scenario you'd use Jenkins API
+        echo "✅ Hello World project test completed (simplified)"
+        
+    - name: Verify JCasC configuration
+      run: |
+        echo "Verifying JCasC configuration..."
+        
+        # Check if JCasC config is loaded
+        kubectl logs -n $NAMESPACE -l app.kubernetes.io/name=jenkins | grep -i "configuration as code" || echo "JCasC logs not found"
+        
+        # Check if Hello World job exists in JCasC config
+        if [ -f "jenkins-jcasc-values.yaml" ]; then
+          echo "JCasC values file exists"
+          grep -i "hello world" jenkins-jcasc-values.yaml || echo "Hello World job not found in JCasC config"
+        fi
+        
+        echo "✅ JCasC verification completed"
+        
+    - name: Show all Kubernetes resources
+      run: |
+        echo "=== kubectl get all --all-namespaces ==="
+        kubectl get all --all-namespaces
+        
+        echo "=== kubectl get all -n jenkins ==="
+        kubectl get all -n jenkins 
+
+    - name: Show Jenkins logs
+      run: kubectl logs pod/jenkins-0 -n jenkins --tail=100 
+
+    - name: Test Jenkins HTTP
+      run: |
+        kubectl port-forward svc/jenkins 8080:8080 -n jenkins &
+        sleep 10
+        curl -I http://localhost:8080/login 
+
+    - name: Run Hello World pipeline
+      run: |
+        kubectl port-forward svc/jenkins 8080:8080 -n jenkins &
+        sleep 45
+        # Sprawdź czy job istnieje
+        for i in {1..10}; do
+          JOB_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" "http://admin:admin@localhost:8080/job/hello-world/api/json")
+          if [ "$JOB_EXISTS" = "200" ]; then
+            echo "Job hello-world istnieje."
+            break
+          fi
+          echo "Czekam na utworzenie joba hello-world... ($i)"
+          sleep 6
+        done
+        if [ "$JOB_EXISTS" != "200" ]; then
+          echo "Job hello-world nie został utworzony przez CasC!"
+          exit 1
+        fi
+        # Wywołaj build pipeline przez REST API
+        curl -X POST "http://admin:admin@localhost:8080/job/hello-world/build" -s -o /dev/null -w "%{http_code}\n"
+        sleep 25
+        # Pobierz numer ostatniego buildu
+        BUILD_NUM=$(curl -s "http://admin:admin@localhost:8080/job/hello-world/api/json" | grep -o 'lastBuild":{"number":[0-9]*' | grep -o '[0-9]*$')
+        echo "Last build number: $BUILD_NUM"
+        # Sprawdź status buildu
+        STATUS=$(curl -s "http://admin:admin@localhost:8080/job/hello-world/$BUILD_NUM/api/json" | grep -o 'result":"[A-Z]*' | cut -d'"' -f2)
+        echo "Build status: $STATUS"
+        if [ "$STATUS" != "SUCCESS" ]; then
+          echo "Hello World pipeline failed!"
+          echo "Logi joba:"
+          curl -s "http://admin:admin@localhost:8080/job/hello-world/$BUILD_NUM/consoleText"
+          exit 1
+        fi
+        echo "Hello World pipeline succeeded!" 

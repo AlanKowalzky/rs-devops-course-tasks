@@ -1,0 +1,52 @@
+controller:
+  serviceType: NodePort
+  persistence:
+    enabled: true
+    storageClass: minikube-hostpath
+    size: 8Gi
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+  startupProbe:
+    initialDelaySeconds: 120
+    periodSeconds: 10
+    failureThreshold: 60
+  JCasC:
+    enabled: true
+    configScripts:
+      basic-casc: |-
+        jenkins:
+          securityRealm:
+            local:
+              allowsSignup: false
+              users:
+                - id: "admin"
+                  password: "admin"
+          authorizationStrategy:
+            loggedInUsersCanDoAnything:
+              allowAnonymousRead: false
+      jobs:
+        - script: >
+            pipelineJob('hello-world') {
+              definition {
+                cps {
+                  script('''
+                    pipeline {
+                      agent any
+                      stages {
+                        stage('Hello') {
+                          steps {
+                            echo 'Hello, Jenkins!'
+                          }
+                        }
+                      }
+                    }
+                  '''.stripIndent())
+                  sandbox()
+                }
+              }
+            }

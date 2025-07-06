@@ -1,0 +1,85 @@
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 6.8.0-1030-aws x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sat Jul  5 23:50:31 UTC 2025
+
+  System load:  0.12               Processes:             148
+  Usage of /:   29.3% of 19.20GB   Users logged in:       0
+  Memory usage: 22%                IPv4 address for ens5: 172.31.1.67
+  Swap usage:   0%
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+9 updates can be applied immediately.
+9 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+1 additional security update can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+New release '24.04.2 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ 
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ # =============================================================================
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ # HEALTH CHECKS: Czekam na gotowość usług przed testami [A
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ # =============================================================================
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ echo "=== HEALTH CHECKS: Czekam na gotowość usług ==="
+[?2004l=== HEALTH CHECKS: Czekam na gotowość usług ===
+[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ 
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ # 1. Czekam na gotowość Minikube (zwiększony timeout i lepsze sprawdzenia)
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ echo "🔍 Health Check 1: Minikube..."
+[?2004l🔍 Health Check 1: Minikube...
+[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ timeout 600 bash -c 'until minikube status | grep -q "Running" && minikube kubectl get nodes > /dev/null 2>&1 && minikube kubectl get pods > /dev/null 2>&1; do 
+[?2004l[?2004h>   echo "⏳ Czekam na Minikube... (status: $(minikube status | grep -E "host:|kubelet:|apiserver:" || echo "nieznany"))"
+[?2004l[?2004h>   echo "⏳ Sprawdzam kubectl... (nodes: $(minikube kubectl get nodes 2>/dev/null | wc -l || echo "błąd"))"
+[?2004l[?2004h>   echo "⏳ Debug kubectl nodes:"
+[?2004l[?2004h>   minikube kubectl get nodes 2>&1 || echo "Błąd kubectl get nodes"
+[?2004l[?2004h>   echo "⏳ Debug kubectl pods (default namespace):"
+[?2004l[?2004h>   minikube kubectl get pods 2>&1 | head -5 || echo "Błąd kubectl get pods"
+[?2004l[?2004h>   sleep 15
+[?2004l[?2004h> done' || {
+[?2004l[?2004h>   echo "❌ Minikube nie jest gotowy po 10 minutach!"
+[?2004l[?2004h>   echo "Status minikube:"
+[?2004l[?2004h>   minikube status
+[?2004l[?2004h>   echo "Logi minikube:"
+[?2004l[?2004h>   minikube logs --file=/tmp/minikube_test.log
+[?2004l[?2004h>   tail -20 /tmp/minikube_test.log
+[?2004l[?2004h>   exit 1
+[?2004l[?2004h> }
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ echo "✅ Minikube gotowy!"
+[?2004l✅ Minikube gotowy!
+[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ 
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ # Dodatkowe sprawdzenie kubectl
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ echo "🔍 Sprawdzam kubectl..."
+[?2004l🔍 Sprawdzam kubectl...
+[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ timeout 60 bash -c 'until minikube kubectl get nodes | grep -q "Ready"; do 
+[?2004l[?2004h>   echo "⏳ Czekam na gotowe node... (status: $(minikube kubectl get nodes | grep -o "Ready\|NotReady" || echo "brak"))"
+[?2004l[?2004h>   sleep 10
+[?2004lu [?2004h> done' || {
+[?2004l[?2004h>   echo "❌ Node nie jest Ready!"
+[?2004l[?2004h>   minikube kubectl get nodes
+[?2004l[?2004h>   exit 1
+[?2004l[?2004h> }
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ echo "✅ Node gotowy!"
+[?2004l✅ Node gotowy!
+[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ 
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ # 2. Czekam na gotowość Jenkins pods (zwiększony timeout)
+[?2004l[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ echo "🔍 Health Check 2: Jenkins pods..."
+[?2004l🔍 Health Check 2: Jenkins pods...
+[?2004h]0;ubuntu@ip-172-31-1-67: ~[01;32mubuntu@ip-172-31-1-67[00m:[01;34m~[00m$ timeout 900 bash -c 'until kubectl get pods --namespace=jenkins | grep jenkins | grep -q "Running"; do 
+[?2004l[?2004h>   echo "⏳ Czekam na Jenkins pods... (status: $(kubectl get pods --namespace=jenkins | grep jenkins || echo "Brak podów"))"
+[?2004l[?2004h>   sleep 20
+[?2004l[?2004h> done' || {
+[?2004l=[?2004h>   echo "❌ Jenkins pods nie są gotowe po 15 minutach!"
+[?2004l[?2004h>   kubectl get pods --namespace=jenkins
+[?2004l[?2004h>   exit 1
+[?2004l[?2004h> }
+[?2004lNo resources found in jenkins namespace.
+No resources found in jenkins namespace.
+⏳ Czekam na Jenkins pods... (status: Brak podów)

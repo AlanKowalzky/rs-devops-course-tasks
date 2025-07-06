@@ -1,0 +1,409 @@
+# RS School DevOps Course - Task 1: AWS Account Configuration & Terraform
+
+This project is an implementation of Task 1 for the RS School DevOps course. The goal is to set up an AWS account, deploy basic infrastructure using Terraform, and automate this process using GitHub Actions.
+
+## Infrastructure Overview
+
+The infrastructure managed by Terraform in this task includes:
+
+*   **S3 Bucket for Terraform Backend:** To securely store the Terraform state file (`terraform.tfstate`).
+*   **S3 Bucket for Application Data:** An example bucket for application data.
+*   **IAM Role for GitHub Actions (`GithubActionsRole`):** Enables GitHub Actions to securely authenticate with AWS using OIDC (OpenID Connect) and manage resources.
+
+## Prerequisites
+
+Before working with this project, ensure you have:
+
+1.  **Installed Software:**
+    *   AWS CLI (version 2 or later)
+    *   Terraform (version 1.6.0 or later)
+2.  **Configured AWS Account:**
+    *   An IAM user (not root) created with the following AWS-managed policies attached:
+        *   `AmazonEC2FullAccess`
+        *   `AmazonRoute53FullAccess`
+        *   `AmazonS3FullAccess`
+        *   `IAMFullAccess`
+        *   `AmazonVPCFullAccess`
+        *   `AmazonSQSFullAccess`
+        *   `AmazonEventBridgeFullAccess`
+    *   MFA (Multi-Factor Authentication) configured for both the root user and the newly created IAM user.
+    *   Access keys (Access Key ID and Secret Access Key) generated for the newly created IAM user.
+    *   AWS CLI configured locally to use this user's credentials.
+3.  **GitHub Repository:**
+    *   A GitHub repository created (e.g., `rs-devops-course-tasks` or `rsschool-devops-course-tasks`).
+
+## Infrastructure Details
+
+### Terraform Backend
+
+The Terraform state is stored in a dedicated S3 bucket. The backend configuration is located in the `backend.tf` file.
+
+### S3 Buckets
+
+*   **Terraform State Bucket:** Name defined in `backend.tf` and the `s3_backend_bucket_name` variable.
+*   **Application Data Bucket:** Name defined in the `application_data_s3_bucket_name` variable.
+
+### IAM Role for GitHub Actions (`GithubActionsRole`)
+
+This role is crucial for secure integration between GitHub Actions and AWS.
+
+*   **Purpose:** Allows GitHub Actions to assume this role via OIDC federation, eliminating the need to store long-lived AWS credentials as GitHub secrets.
+*   **Trust Policy:**
+    *   Trusts the GitHub OIDC provider (`token.actions.githubusercontent.com`).
+    *   Includes conditions to restrict who can assume the role:
+        *   **`sub` (Subject):** Specifies allowed repositories, branches (`main`, `task-1`), and events (`pull_request`).
+        *   **`aud` (Audience):** Requires the token to be intended for `sts.amazonaws.com`.
+*   **Attached Permissions:** As per task requirements, the role has the following AWS-managed policies attached (note: in a production environment, the principle of least privilege is recommended):
+    *   `AmazonEC2FullAccess`
+    *   `AmazonRoute53FullAccess`
+    *   `AmazonS3FullAccess`
+    *   `IAMFullAccess`
+    *   `AmazonVPCFullAccess`
+    *   `AmazonSQSFullAccess`
+    *   `AmazonEventBridgeFullAccess`
+
+## Configuration
+
+### Terraform Variables (`variables.tf`)
+
+Key variables that might need adjustment:
+
+*   `aws_region`: The AWS region (default: `eu-west-1`).
+*   `s3_backend_bucket_name`: A globally unique S3 bucket name for the Terraform state. **Must match the configuration in `backend.tf`**.
+*   `application_data_s3_bucket_name`: A globally unique S3 bucket name for application data.
+*   `github_actions_role_name`: The name of the IAM role for GitHub Actions (default: `GithubActionsRole`).
+*   `github_org_or_user`: Your GitHub username or organization name (e.g., `AlanKowalzky`).
+*   `github_repo_name`: Your GitHub repository name (e.g., `rs-devops-course-tasks`).
+
+### GitHub Secrets
+
+The following secret needs to be configured in your GitHub repository's Actions settings:
+
+*   `AWS_ACCOUNT_ID`: Your AWS Account ID. This is used in the workflow to construct the IAM role ARN.
+
+## Usage
+
+### GitHub Actions Workflow (`.github/workflows/terraform.yml`)
+
+The workflow is automatically triggered by the following events:
+
+*   **Push** to the `main` and `task-1` branches.
+*   **Pull Request** targeting the `main` branch.
+
+The workflow consists of the following jobs:
+
+1.  **`terraform-check`**:
+    *   Checks the formatting of the Terraform code (`terraform fmt -check -recursive`). If the formatting is incorrect, the job will fail.
+2.  **`terraform-plan`**:
+    *   Authenticates to AWS using OIDC and the `GithubActionsRole`.
+    *   Initializes Terraform (`terraform init`).
+    *   Generates an execution plan (`terraform plan`) and saves it as an artifact.
+    *   Includes steps to debug the OIDC token to verify its contents.
+3.  **`terraform-apply`**:
+    *   Runs **only** on push to the `main` branch.
+    *   Downloads the plan artifact from the `terraform-plan` job.
+    *   Authenticates to AWS using OIDC.
+    *   Applies the Terraform plan (`terraform apply`), deploying changes to the AWS infrastructure.
+
+### Local Terraform Usage (Optional)
+
+You can also manage the infrastructure locally:
+
+1.  **Initialize:**
+    ```bash
+    terraform init
+    ```
+2.  **Plan:**
+    ```bash
+    terraform plan
+    ```
+3.  **Apply:**
+    ```bash
+    terraform apply
+    ```
+
+Ensure your local AWS CLI is configured with appropriate permissions.
+
+## Security Considerations
+
+*   **MFA:** Always use MFA for all IAM users, including the root user.
+*   **Principle of Least Privilege:** While this task requires the use of broad `*FullAccess` policies for the `GithubActionsRole`, in production environments, always apply the principle of least privilege by creating custom IAM policies with only the necessary actions.
+*   **OIDC Conditions:** The IAM role's trust policy uses `sub` and `aud` conditions to restrict which GitHub Actions workflows can assume the role, enhancing security.
+*   **Secrets:** Avoid storing long-lived credentials. OIDC federation is the preferred approach.
+
+
+
+---
+*Documentation prepared as part of Task 1 for the RS School DevOps Course.*
+
+## Task 2: Basic Infrastructure Configuration
+
+This task creates a basic yet robust network infrastructure, ready for hosting a Kubernetes cluster.
+
+### Network Topology
+
+*   **VPC:** The main, isolated virtual network (`10.0.0.0/16`).
+*   **Public Subnets:** Two subnets, each in a different Availability Zone (AZ). Resources in these subnets have direct access to the internet.
+*   **Private Subnets:** Two subnets, each in a different AZ. Resources in these subnets do not have direct access to the internet.
+*   **Internet Gateway:** Enables communication between public subnets and the internet.
+*   **Routing:**
+    *   The route table for public subnets directs traffic `0.0.0.0/0` to the Internet Gateway.
+    *   The route tables for private subnets direct traffic `0.0.0.0/0` to the NAT instance.
+
+### NAT Instance / Bastion Host
+
+To optimize costs (within the Free Tier), a single EC2 instance (`t3.micro`) fulfills two roles:
+1.  **NAT Instance:** Allows resources in private subnets to initiate outbound connections to the internet.
+2.  **Bastion Host:** Serves as a secure access point (SSH) for managing resources in private subnets.
+
+*   **Access:** SSH access to the instance is allowed from the IP address defined in the `my_ip_for_ssh` variable.
+*   **Security Group:** A dedicated security group (`nat_instance_sg`) controls traffic to and from the instance.
+
+### Additional Variables for Task 2
+
+*   `vpc_cidr_block`: CIDR block for the VPC.
+*   `public_subnet_cidr_blocks` / `private_subnet_cidr_blocks`: CIDR blocks for the subnets.
+*   `nat_instance_type`: Instance type for the NAT/Bastion (default: `t3.micro` for the Free Tier).
+*   `my_ip_for_ssh`: **(Requires configuration)** Your public IP address from which you'll connect via SSH. This can be set in the `terraform.tfvars` file or as an environment variable.
+
+## Task 3: K8s Cluster Configuration and Creation
+
+## 🎯 Objective
+This project implements a Kubernetes (k3s) cluster on AWS using Terraform, including a bastion host for secure access and automated deployment scripts.
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Local PC      │    │   Bastion Host  │    │   k3s Master    │
+│                 │    │   (Public Subnet)│    │  (Private Subnet)│
+│ kubectl client  │───▶│   SSH Gateway   │───▶│   k3s Server    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │
+                                ▼
+                       ┌─────────────────┐
+                       │   k3s Worker    │
+                       │  (Private Subnet)│
+                       │   k3s Agent     │
+                       └─────────────────┘
+```
+
+## 📁 Project Structure
+
+```
+rs-devops-course-tasks/
+├── main.tf                 # Main Terraform configuration
+├── variables.tf            # Variables for k3s cluster
+├── outputs.tf              # Outputs with cluster information
+├── security_groups.tf      # Security groups for cluster
+├── iam.tf                  # IAM roles and policies
+├── install_k3s.sh          # Automated k3s installation script
+├── deploy_workload.sh      # Workload deployment script
+├── verify_cluster.sh       # Cluster verification script
+├── README.md               # This documentation
+└── diagrams/               # Architecture diagrams
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+- AWS CLI configured
+- Terraform installed
+- SSH key pair in AWS
+- kubectl installed locally
+
+### 1. Infrastructure Deployment
+
+```bash
+# Initialize Terraform
+terraform init
+
+# Plan the deployment
+terraform plan
+
+# Apply the configuration
+terraform apply
+```
+
+### 2. K3s Cluster Installation
+
+```bash
+# Make script executable
+chmod +x install_k3s.sh
+
+# Run k3s installation
+./install_k3s.sh
+```
+
+### 3. Workload Deployment
+
+```bash
+# Make script executable
+chmod +x deploy_workload.sh
+
+# Deploy sample workload
+./deploy_workload.sh
+```
+
+### 4. Cluster Verification
+
+```bash
+# Verify nodes
+kubectl get nodes
+
+# Verify all resources
+kubectl get all --all-namespaces
+
+# Check specific nginx pod
+kubectl get pods -l app=nginx
+```
+
+## 🔧 Configuration
+
+### Terraform Variables
+
+Key variables that need to be configured:
+
+```hcl
+variable "aws_region" {
+  description = "AWS region"
+  default     = "us-west-2"
+}
+
+variable "ssh_key_name" {
+  description = "Name of SSH key pair in AWS"
+  type        = string
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for VPC"
+  default     = "10.0.0.0/16"
+}
+```
+
+### Security Groups
+
+- **Bastion Host**: SSH access from your IP
+- **K3s Master**: Internal cluster communication
+- **K3s Worker**: Internal cluster communication
+
+### IAM Roles
+
+- **Bastion Role**: Basic EC2 permissions
+- **K3s Master Role**: Cluster management permissions
+- **K3s Worker Role**: Node operation permissions
+
+## 📊 Cluster Components
+
+### Bastion Host
+- **Instance Type**: t3.micro (Free Tier)
+- **Subnet**: Public subnet
+- **Purpose**: SSH gateway to private instances
+- **Security**: Restricted SSH access
+
+### K3s Master Node
+- **Instance Type**: t3.micro (Free Tier)
+- **Subnet**: Private subnet
+- **Purpose**: Kubernetes control plane
+- **Components**: k3s server, etcd
+
+### K3s Worker Node
+- **Instance Type**: t3.micro (Free Tier)
+- **Subnet**: Private subnet
+- **Purpose**: Kubernetes worker node
+- **Components**: k3s agent, container runtime
+
+## 🔐 Security Features
+
+- **Private Subnets**: Worker nodes in private subnets
+- **Bastion Access**: Single point of entry through bastion
+- **Security Groups**: Restrictive firewall rules
+- **IAM Roles**: Least privilege access
+- **SSH Keys**: Key-based authentication
+
+## 🛠️ Automation Scripts
+
+### install_k3s.sh
+- Installs k3s on master and worker nodes
+- Configures cluster token and networking
+- Copies kubeconfig to bastion host
+- Sets up SSH tunneling for local access
+
+### deploy_workload.sh
+- Deploys nginx pod from official Kubernetes examples
+- Verifies pod status and accessibility
+- Provides connection information
+
+### verify_cluster.sh
+- Checks cluster health and node status
+- Validates workload deployment
+- Tests network connectivity
+
+## 📈 Monitoring and Troubleshooting
+
+### Common Commands
+
+```bash
+# Check cluster status
+kubectl cluster-info
+
+# View node details
+kubectl describe nodes
+
+# Check pod logs
+kubectl logs <pod-name>
+
+# Access pod shell
+kubectl exec -it <pod-name> -- /bin/bash
+```
+
+### Troubleshooting
+
+1. **SSH Connection Issues**
+   - Verify security group rules
+   - Check SSH key permissions
+   - Ensure bastion host is running
+
+2. **K3s Installation Problems**
+   - Check instance connectivity
+   - Verify token configuration
+   - Review k3s service logs
+
+3. **Workload Deployment Issues**
+   - Check pod status and events
+   - Verify resource availability
+   - Review container logs
+
+## 🧹 Cleanup
+
+```bash
+# Destroy infrastructure
+terraform destroy
+
+# Remove local kubeconfig
+rm -f ~/.kube/config-k3s
+```
+
+## 📚 Additional Resources
+
+- [K3s Documentation](https://docs.k3s.io/)
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [Kubernetes Documentation](https://kubernetes.io/docs/)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is part of the AWS DevOps course tasks.
+
+---
+
+**Author**: [Your Name]  
+**Last Updated**: $(date)  
+**Version**: 1.0.0

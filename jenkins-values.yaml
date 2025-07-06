@@ -1,0 +1,15 @@
+controller:
+  admin:
+    username: admin
+    password: admin123
+  persistence:
+    enabled: true
+    storageClass: minikube-hostpath
+    size: 1Gi
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m" 
